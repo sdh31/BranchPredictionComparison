@@ -44,17 +44,17 @@ public class TwoLevelDataGatherer {
 			BufferedReader br = new BufferedReader(new FileReader(absoluteFilePath));
 			StringBuilder sb = new StringBuilder();
    			String line = br.readLine();
-    		while (line != null) {
-    			if (line.contains("sim_num_insn")) {
+			while (line != null) {
+				if (line.contains("sim_num_insn")) {
 					String[] splits = line.split("\\s+");
 					instructionCount = splits[1];
-    			}
-    			if (line.contains("bpred_2lev.misses")) {
+				}
+				if (line.contains("bpred_2lev.misses")) {
 					String[] splits = line.split("\\s+");
 					bPredMisses = splits[1];
-    			}
-        		line = br.readLine();
-    		}
+				}
+				line = br.readLine();
+			}
 		} catch (IOException e) { }
 		DataLine dataLine= new DataLine(benchmark, fileName, bPredMisses, instructionCount);
 		return dataLine;
