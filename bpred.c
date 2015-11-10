@@ -501,29 +501,30 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
 	int l1index, l2index;
 
         /* traverse 2-level tables */
+
+        /* Take insn address, shift it over some bits to give you actual branch address information.
+           Then, and it with the l1size - 1, which basically hashes the address into the l1 table */
         l1index = (baddr >> MD_BR_SHIFT) & (pred_dir->config.two.l1size - 1);
+
+        /* take l1index, get back an int. This int corresponds to some entry in the l2 table */
         l2index = pred_dir->config.two.shiftregs[l1index];
-        if (pred_dir->config.two.xor)
-	  {
-#if 1
-	    /* this L2 index computation is more "compatible" to McFarling's
-	       verison of it, i.e., if the PC xor address component is only
-	       part of the index, take the lower order address bits for the
-	       other part of the index, rather than the higher order ones */
-	    l2index = (((l2index ^ (baddr >> MD_BR_SHIFT))
-			& ((1 << pred_dir->config.two.shift_width) - 1))
-		       | ((baddr >> MD_BR_SHIFT)
-			  << pred_dir->config.two.shift_width));
-#else
-	    l2index = l2index ^ (baddr >> MD_BR_SHIFT);
-#endif
-	  }
-	else
-	  {
-	    l2index =
-	      l2index
-		| ((baddr >> MD_BR_SHIFT) << pred_dir->config.two.shift_width);
-	  }
+
+        if (pred_dir->config.two.xor) {
+          #if 1
+	           /* this L2 index computation is more "compatible" to McFarling's
+	           verison of it, i.e., if the PC xor address component is only
+	           part of the index, take the lower order address bits for the
+	           other part of the index, rather than the higher order ones */
+	           l2index = (((l2index ^ (baddr >> MD_BR_SHIFT)) & ((1 << pred_dir->config.two.shift_width) - 1))
+                       | ((baddr >> MD_BR_SHIFT) << pred_dir->config.two.shift_width));
+          #else
+	           l2index = l2index ^ (baddr >> MD_BR_SHIFT);
+          #endif
+	       } else {
+	         l2index = l2index | ((baddr >> MD_BR_SHIFT) << pred_dir->config.two.shift_width);
+	       }
+
+        /* hashing down l2 index so it fits into the table */
         l2index = l2index & (pred_dir->config.two.l2size - 1);
 
         /* get a pointer to prediction state information */
