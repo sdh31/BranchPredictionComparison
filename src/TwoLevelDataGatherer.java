@@ -21,11 +21,17 @@ public class TwoLevelDataGatherer {
 	public List<DataLine> gatherDataFromFolder(String folderName) {
 		List<DataLine> dataLines = new ArrayList<DataLine>();
 		File folder = new File(folderName);
-		File[] files = folder.listFiles();
+		// keep this at top level folder, ./2LevelData/
+		File[] benchmarkFolders = folder.listFiles();
 
-		for (File file : files) {
-			if (file.isFile() && file.getName().contains(("2lev"))) {
-				dataLines.add(gatherFileData(file, folder.getName()));
+		for (File benchmarkFolder : benchmarkFolders) {
+			if (benchmarkFolder.isDirectory()) {
+				File [] files = benchmarkFolder.listFiles();
+				for (File file : files) {
+					if (file.isFile() && file.getName().contains(("2lev"))) {
+						dataLines.add(gatherFileData(file, benchmarkFolder.getName()));
+					}
+				}
 			}
 		}
 		return dataLines;
@@ -64,7 +70,7 @@ public class TwoLevelDataGatherer {
 		try {
 			File fileOut = new File(TWO_LEVEL_DATA_FILE);
 			fileOut.createNewFile();
-			BufferedWriter writer = new BufferedWriter(new FileWriter(fileOut.getName(), true));
+			BufferedWriter writer = new BufferedWriter(new FileWriter(fileOut.getName(), false));
 			for (DataLine dataLine : dataLines) {
 				String lineOut = dataLine.benchmark + "," + dataLine.config + "," +
 						dataLine.bPredMisses + "," + dataLine.numInstructions;
