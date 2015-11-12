@@ -51,6 +51,9 @@ public class TwoLevelDataGatherer {
 			StringBuilder sb = new StringBuilder();
    			String line = br.readLine();
 			while (line != null) {
+				if (line.contains("bpred:2lev") && line.contains("(<l1size> <l2size> <hist_size> <xor>)")) {
+					ensureCorrectFileConfig(line, file);
+				}
 				if (line.contains("sim_num_insn")) {
 					String[] splits = line.split("\\s+");
 					instructionCount = splits[1];
@@ -64,6 +67,31 @@ public class TwoLevelDataGatherer {
 		} catch (IOException e) { }
 		DataLine dataLine= new DataLine(benchmark, fileName, bPredMisses, instructionCount);
 		return dataLine;
+	}
+
+	private void ensureCorrectFileConfig(String line, File file) {
+		String [] config = line.split("\\s+");
+		String l1Size = config[1];
+		String l2Size = config[2];
+		String histSize = config[3];
+		String xor = config[4];
+
+		// fileName looks like twolf_2lev_1_16_4_0.txt
+		String fileName = file.getName();
+		String [] fileNameConfig = fileName.split("_");
+
+		if (!fileNameConfig[2].equals(l1Size)) {
+			System.out.println("L1 size is incorrect for file: " + fileName);
+		}
+		if (!fileNameConfig[3].equals(l2Size)) {
+			System.out.println("L2 size is incorrect for file: " + fileName);
+		}
+		if (!fileNameConfig[4].equals(histSize)) {
+			System.out.println("History size is incorrect for file: " + fileName);
+		}
+		if (!fileNameConfig[5].substring(0, fileNameConfig[5].lastIndexOf('.')).equals(xor)) {
+			System.out.println("XOR argument is incorrect for file: " + fileName);
+		}
 	}
 
 	private void writeDataToFile(List<DataLine> dataLines) {
