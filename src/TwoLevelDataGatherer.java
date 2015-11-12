@@ -45,6 +45,7 @@ public class TwoLevelDataGatherer {
 
 		String instructionCount = "";
 		String bPredMisses = "";
+		Config config = null;
 
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(absoluteFilePath));
@@ -52,7 +53,7 @@ public class TwoLevelDataGatherer {
    			String line = br.readLine();
 			while (line != null) {
 				if (line.contains("bpred:2lev") && line.contains("(<l1size> <l2size> <hist_size> <xor>)")) {
-					ensureCorrectFileConfig(line, file);
+					config = getFileConfig(line);
 				}
 				if (line.contains("sim_num_insn")) {
 					String[] splits = line.split("\\s+");
@@ -65,33 +66,35 @@ public class TwoLevelDataGatherer {
 				line = br.readLine();
 			}
 		} catch (IOException e) { }
-		DataLine dataLine= new DataLine(benchmark, fileName, bPredMisses, instructionCount);
+		DataLine dataLine= new DataLine(benchmark, config, bPredMisses, instructionCount);
 		return dataLine;
 	}
 
-	private void ensureCorrectFileConfig(String line, File file) {
+	private Config getFileConfig(String line) {
 		String [] config = line.split("\\s+");
 		String l1Size = config[1];
 		String l2Size = config[2];
-		String histSize = config[3];
+		String historyWidth = config[3];
 		String xor = config[4];
+		String configType = getConfigType(l1Size, l2Size, historyWidth);
+		return new Config(configType, l1Size, l2Size, historyWidth, xor);
+	}
 
-		// fileName looks like twolf_2lev_1_16_4_0.txt
-		String fileName = file.getName();
-		String [] fileNameConfig = fileName.split("_");
+	private String getConfigType(String l1, String l2, String hist) {
+		Integer l1Size = Integer.parseInt(l1);
+		Integer l2Size = Integer.parseInt(l2);
+		Integer historyWidth = Integer.parseInt(hist);
 
-		if (!fileNameConfig[2].equals(l1Size)) {
-			System.out.println("L1 size is incorrect for file: " + fileName);
+		if (l1Size == 1) {
+			return "GAg";
 		}
-		if (!fileNameConfig[3].equals(l2Size)) {
-			System.out.println("L2 size is incorrect for file: " + fileName);
+		if (l1Size == 512 && l2Size == Math.pow(2, historyWidth)) {
+			return "PAg";
 		}
-		if (!fileNameConfig[4].equals(histSize)) {
-			System.out.println("History size is incorrect for file: " + fileName);
+		if (l1Size == 512 && l2Size == l1Size*Math.pow(2, historyWidth)) {
+			return "PAp";
 		}
-		if (!fileNameConfig[5].substring(0, fileNameConfig[5].lastIndexOf('.')).equals(xor)) {
-			System.out.println("XOR argument is incorrect for file: " + fileName);
-		}
+		return "No_Matching_Config_Type_ERROR";
 	}
 
 	private void writeDataToFile(List<DataLine> dataLines) {
@@ -100,8 +103,14 @@ public class TwoLevelDataGatherer {
 			fileOut.createNewFile();
 			BufferedWriter writer = new BufferedWriter(new FileWriter(fileOut.getName(), false));
 			for (DataLine dataLine : dataLines) {
-				String lineOut = dataLine.benchmark + "," + dataLine.config + "," +
-						dataLine.bPredMisses + "," + dataLine.numInstructions;
+				String lineOut = dataLine.benchmark + "," +
+						         dataLine.config.configType + "," +
+						         dataLine.config.l1Size + "," +
+						         dataLine.config.l2Size + "," +
+						         dataLine.config.historyWidth + "," +
+						         dataLine.config.xor + "," +
+						         dataLine.bPredMisses + "," +
+						         dataLine.numInstructions;
 				writer.write(lineOut);
 				writer.newLine();
 			}
@@ -109,13 +118,29 @@ public class TwoLevelDataGatherer {
 		} catch (IOException e) { }
 	}
 
+	private class Config {
+		private String configType;
+		private String l1Size;
+		private String l2Size;
+		private String historyWidth;
+		private String xor;
+
+		public Config(String configType, String l1Size, String l2Size, String historyWidth, String xor) {
+			this.configType = configType;
+			this.l1Size = l1Size;
+			this.l2Size = l2Size;
+			this.historyWidth = historyWidth;
+			this.xor = xor;
+		}
+	}
+
 	private class DataLine {
 		private String benchmark;
-		private String config;
+		private Config config;
 		private String bPredMisses;
 		private String numInstructions;
 
-		public DataLine(String benchmark, String config, String bPredMisses, String numInstructions) {
+		public DataLine(String benchmark, Config config, String bPredMisses, String numInstructions) {
 			this.benchmark = benchmark;
 			this.config = config;
 			this.bPredMisses = bPredMisses;
