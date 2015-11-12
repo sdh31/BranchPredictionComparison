@@ -2,24 +2,35 @@
 % Plotting 2 Level Predictor Data
 
 %% Importing csv-file
-clear; close all
+clear; close all; clf
 
 fid = fopen('TwoLevelData.csv');
-C = textscan(fid, '%s %s %f %f', 'Delimiter', ',', 'EmptyValue', -Inf);
+C = textscan(fid, '%s %s %f %f %f %f %f %f', 'Delimiter', ',', 'EmptyValue', -Inf);
 fclose(fid);
 
 benchmarks = categories(categorical(C{1})); % name of benchmarks
-parameters = cellstr(C{2}); % benchmark parameters
-MPKI = C{3}./(C{4}/1000); % misses per thousand instructions
+type = categories(categorical(C{2})); % type of predictor
+width = C{5};
+MPKI = C{7}./(C{8}/1000); % misses per thousand instructions
 
-%% Parsing Parameters
-% Find GAg configurations
-% GAg_index = find(~cellfun(@isempty,strfind(parameters, '2lev_1')))
+%% Displaying Data
+MPKI_bar = reshape(MPKI, 15, [])';
+config = categories(categorical(strcat(C{2}, num2str(C{5}))));
 
-MPKI = reshape(MPKI, 15, [])';
-
-figure(1); clf
-bar(MPKI)
+figure(1)
+bar(MPKI_bar)
 set(gca, 'XTickLabel', benchmarks)
 ylabel('MPKI')
 xlabel('Benchmarks')
+title('MPKI per Benchmark for All Predictor Type')
+legend(config, 'Location', 'Best')
+
+%% Determining the Effects of Width
+figure(2)
+bar3(MPKI_bar)
+zlabel('MPKI')
+ylabel('Benchmark')
+xlabel('Configurations')
+
+set(gca, 'YTickLabel', benchmarks)
+set(gca, 'XTickLabel', config)
