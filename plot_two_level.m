@@ -21,10 +21,12 @@ config = categories(categorical(strcat(C{2}, num2str(C{5}))));
 figure(1)
 bar(MPKI_bar)
 set(gca, 'XTickLabel', benchmarks)
+legend(config, 'Location', 'BestOutside')
 ylabel('MPKI')
 xlabel('Benchmarks')
 title('MPKI per Benchmark for All Predictor Type')
-legend(config, 'Location', 'Best')
+
+print('2d_2lev_benchmark', '-djpeg')
 
 %% 3D Representation of All Configurations
 figure(2)
@@ -35,6 +37,7 @@ xlabel('Configurations')
 
 set(gca, 'YTickLabel', benchmarks)
 set(gca, 'XTickLabel', config)
+print('3d_2lev_benchmark', '-djpeg')
 
 %% Comparing Schemes with Same Length
 figure(3)
