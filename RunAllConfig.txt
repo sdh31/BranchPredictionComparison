@@ -1,0 +1,9 @@
+./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 1024 1 0 -max:inst 50000000 -fastfwd 20000000 > "gcc_2lev_512_1024_1_0.txt" 2>&1
+
+./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 2048 2 0 -max:inst 50000000 -fastfwd 20000000 > "gcc_2lev_512_2048_2_0.txt" 2>&1
+
+./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 8192 4 0 -max:inst 50000000 -fastfwd 20000000 > "gcc_2lev_512_8192_4_0" 2>&1
+
+./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 131072 8 0 -max:inst 50000000 -fastfwd 20000000 > "gcc_2lev_512_131072_8_0.txt" 2>&1
+
+./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 33554432 16 0 -max:inst 50000000 -fastfwd 20000000 > "gcc_2lev_512_33554432_16_0.txt" 2>&1
