@@ -1,54 +1,3 @@
-/* sim-outorder.c - sample out-of-order issue perf simulator implementation */
-
-/* SimpleScalar(TM) Tool Suite
- * Copyright (C) 1994-2003 by Todd M. Austin, Ph.D. and SimpleScalar, LLC.
- * All Rights Reserved. 
- * 
- * THIS IS A LEGAL DOCUMENT, BY USING SIMPLESCALAR,
- * YOU ARE AGREEING TO THESE TERMS AND CONDITIONS.
- * 
- * No portion of this work may be used by any commercial entity, or for any
- * commercial purpose, without the prior, written permission of SimpleScalar,
- * LLC (info@simplescalar.com). Nonprofit and noncommercial use is permitted
- * as described below.
- * 
- * 1. SimpleScalar is provided AS IS, with no warranty of any kind, express
- * or implied. The user of the program accepts full responsibility for the
- * application of the program and the use of any results.
- * 
- * 2. Nonprofit and noncommercial use is encouraged. SimpleScalar may be
- * downloaded, compiled, executed, copied, and modified solely for nonprofit,
- * educational, noncommercial research, and noncommercial scholarship
- * purposes provided that this notice in its entirety accompanies all copies.
- * Copies of the modified software can be delivered to persons who use it
- * solely for nonprofit, educational, noncommercial research, and
- * noncommercial scholarship purposes provided that this notice in its
- * entirety accompanies all copies.
- * 
- * 3. ALL COMMERCIAL USE, AND ALL USE BY FOR PROFIT ENTITIES, IS EXPRESSLY
- * PROHIBITED WITHOUT A LICENSE FROM SIMPLESCALAR, LLC (info@simplescalar.com).
- * 
- * 4. No nonprofit user may place any restrictions on the use of this software,
- * including as modified by the user, by any other authorized user.
- * 
- * 5. Noncommercial and nonprofit users may distribute copies of SimpleScalar
- * in compiled or executable form as set forth in Section 2, provided that
- * either: (A) it is accompanied by the corresponding machine-readable source
- * code, or (B) it is accompanied by a written offer, with no time limit, to
- * give anyone a machine-readable copy of the corresponding source code in
- * return for reimbursement of the cost of distribution. This written offer
- * must permit verbatim duplication by anyone, or (C) it is distributed by
- * someone who received only the executable form, and is accompanied by a
- * copy of the written offer of source code.
- * 
- * 6. SimpleScalar was developed by Todd M. Austin, Ph.D. The tool suite is
- * currently maintained by SimpleScalar LLC (info@simplescalar.com). US Mail:
- * 2395 Timbercrest Court, Ann Arbor, MI 48105.
- * 
- * Copyright (C) 1994-2003 by Todd M. Austin, Ph.D. and SimpleScalar, LLC.
- */
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -122,6 +71,11 @@ static int bimod_config[1] =
 static int twolev_nelt = 4;
 static int twolev_config[4] =
   { /* l1size */1, /* l2size */1024, /* hist */8, /* xor */FALSE};
+
+/* Perceptron Predictor Config (<weight_table_size> <weight_bits> <hist_size>)*/
+static int perceptron_nelt = 3;
+static int perceptron_config[3] = 
+  { /* weight table size */ 512, /* weight bits */ 8, /* hist size */ 8};
 
 /* combining predictor config (<meta_table_size> */
 static int comb_nelt = 1;
@@ -650,7 +604,7 @@ sim_reg_options(struct opt_odb_t *odb)
                );
 
   opt_reg_string(odb, "-bpred",
-		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb}",
+		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|perceptron}",
                  &pred_type, /* default */"bimod",
                  /* print */TRUE, /* format */NULL);
 
@@ -672,6 +626,16 @@ sim_reg_options(struct opt_odb_t *odb)
 		   comb_config, comb_nelt, &comb_nelt,
 		   /* default */comb_config,
 		   /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
+
+  /* Added the Perceptron Flag */ 
+
+  opt_reg_int_list(odb, "-bpred:perceptron",
+                   "perceptron predictor config "
+       "(<weight_table_size> <weight_bits> <hist_size> )",
+                   perceptron_config, perceptron_nelt, &perceptron_nelt,
+       /* default */perceptron_config,
+                   /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
+
 
   opt_reg_int(odb, "-bpred:ras",
               "return address stack size (0 for no return stack)",
@@ -949,6 +913,29 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
     }
+
+  /* added perceptron argument checker */
+     else if (!mystricmp(pred_type, "perceptron"))
+    {
+      /* perceptron predictor, bpred_create() checks args */
+      if (twolev_nelt != 3)
+  fatal("bad perceptron pred config (<weight_table_size> <weight_bits> <hist_size>)");
+      if (btb_nelt != 2)
+  fatal("bad btb config (<num_sets> <associativity>)");
+
+      /* FIXME: MAKE PERCEPTRON BPRED CLASS */ 
+      pred = bpred_create(BPred2Level,
+        /* bimod table size */0,
+        /* 2lev l1 size */twolev_config[0],
+        /* 2lev l2 size */twolev_config[1],
+        /* meta table size */0,
+        /* history reg size */twolev_config[2],
+        /* history xor address */twolev_config[3],
+        /* btb sets */btb_config[0],
+        /* btb assoc */btb_config[1],
+        /* ret-addr stack size */ras_size);
+    } 
+
   else if (!mystricmp(pred_type, "comb"))
     {
       /* combining predictor, bpred_create() checks args */
