@@ -631,7 +631,7 @@ sim_reg_options(struct opt_odb_t *odb)
 
   opt_reg_int_list(odb, "-bpred:perceptron",
                    "perceptron predictor config "
-       "(<weight_table_size> <weight_bits> <hist_size> )",
+       "(<weight_table_size> <weight_bits> <hist_table_size> <hist_length>)",
                    perceptron_config, perceptron_nelt, &perceptron_nelt,
        /* default */perceptron_config,
                    /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
@@ -867,12 +867,12 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
   else if (!mystricmp(pred_type, "taken"))
     {
       /* static predictor, not taken */
-      pred = bpred_create(BPredTaken, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+      pred = bpred_create(BPredTaken, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
   else if (!mystricmp(pred_type, "nottaken"))
     {
       /* static predictor, taken */
-      pred = bpred_create(BPredNotTaken, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+      pred = bpred_create(BPredNotTaken, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
   else if (!mystricmp(pred_type, "bimod"))
     {
@@ -892,7 +892,11 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history xor address */0,
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
-			  /* ret-addr stack size */ras_size);
+			  /* ret-addr stack size */ras_size,
+
+        /* Added for Perceptron */
+        /* weight table size */0,
+        /* weight table length */0);  
     }
   else if (!mystricmp(pred_type, "2lev"))
     {
@@ -911,29 +915,38 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history xor address */twolev_config[3],
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
-			  /* ret-addr stack size */ras_size);
+			  /* ret-addr stack size */ras_size,
+                                  
+        /* Added for Perceptron */
+        /* weight table size */0,
+        /* weight table length */0);  
     }
 
   /* added perceptron argument checker */
      else if (!mystricmp(pred_type, "perceptron"))
     {
       /* perceptron predictor, bpred_create() checks args */
-      if (twolev_nelt != 3)
-  fatal("bad perceptron pred config (<weight_table_size> <weight_bits> <hist_size>)");
+      if (perceptron_nelt != 4)
+  fatal("bad perceptron pred config (<weight_table_size> <weight_bits> <hist_table_size> <hist_length>)");
       if (btb_nelt != 2)
   fatal("bad btb config (<num_sets> <associativity>)");
 
       /* FIXME: MAKE PERCEPTRON BPRED CLASS */ 
       pred = bpred_create(BPred2Level,
         /* bimod table size */0,
-        /* 2lev l1 size */twolev_config[0],
-        /* 2lev l2 size */twolev_config[1],
+        /* 2lev l1 size */perceptron_config[2], /* history table of perceptron = l1 of 2 level */
+        /* 2lev l2 size */0,
         /* meta table size */0,
-        /* history reg size */twolev_config[2],
-        /* history xor address */twolev_config[3],
+        /* history reg size */perceptron_config[3],
+        /* history xor address */0,
         /* btb sets */btb_config[0],
         /* btb assoc */btb_config[1],
-        /* ret-addr stack size */ras_size);
+        /* ret-addr stack size */ras_size,
+
+        /* Added for Perceptron */
+        /* weight table size */perceptron_config[0],
+        /* weight table length */perceptron_config[1]);     
+
     } 
 
   else if (!mystricmp(pred_type, "comb"))
@@ -957,7 +970,11 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history xor address */twolev_config[3],
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
-			  /* ret-addr stack size */ras_size);
+			  /* ret-addr stack size */ras_size,
+                                  
+        /* Added for Perceptron */
+        /* weight table size */0,
+        /* weight table length */0);  
     }
   else
     fatal("cannot parse predictor type `%s'", pred_type);

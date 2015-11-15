@@ -1,54 +1,3 @@
-/* bpred.h - branch predictor interfaces */
-
-/* SimpleScalar(TM) Tool Suite
- * Copyright (C) 1994-2003 by Todd M. Austin, Ph.D. and SimpleScalar, LLC.
- * All Rights Reserved. 
- * 
- * THIS IS A LEGAL DOCUMENT, BY USING SIMPLESCALAR,
- * YOU ARE AGREEING TO THESE TERMS AND CONDITIONS.
- * 
- * No portion of this work may be used by any commercial entity, or for any
- * commercial purpose, without the prior, written permission of SimpleScalar,
- * LLC (info@simplescalar.com). Nonprofit and noncommercial use is permitted
- * as described below.
- * 
- * 1. SimpleScalar is provided AS IS, with no warranty of any kind, express
- * or implied. The user of the program accepts full responsibility for the
- * application of the program and the use of any results.
- * 
- * 2. Nonprofit and noncommercial use is encouraged. SimpleScalar may be
- * downloaded, compiled, executed, copied, and modified solely for nonprofit,
- * educational, noncommercial research, and noncommercial scholarship
- * purposes provided that this notice in its entirety accompanies all copies.
- * Copies of the modified software can be delivered to persons who use it
- * solely for nonprofit, educational, noncommercial research, and
- * noncommercial scholarship purposes provided that this notice in its
- * entirety accompanies all copies.
- * 
- * 3. ALL COMMERCIAL USE, AND ALL USE BY FOR PROFIT ENTITIES, IS EXPRESSLY
- * PROHIBITED WITHOUT A LICENSE FROM SIMPLESCALAR, LLC (info@simplescalar.com).
- * 
- * 4. No nonprofit user may place any restrictions on the use of this software,
- * including as modified by the user, by any other authorized user.
- * 
- * 5. Noncommercial and nonprofit users may distribute copies of SimpleScalar
- * in compiled or executable form as set forth in Section 2, provided that
- * either: (A) it is accompanied by the corresponding machine-readable source
- * code, or (B) it is accompanied by a written offer, with no time limit, to
- * give anyone a machine-readable copy of the corresponding source code in
- * return for reimbursement of the cost of distribution. This written offer
- * must permit verbatim duplication by anyone, or (C) it is distributed by
- * someone who received only the executable form, and is accompanied by a
- * copy of the written offer of source code.
- * 
- * 6. SimpleScalar was developed by Todd M. Austin, Ph.D. The tool suite is
- * currently maintained by SimpleScalar LLC (info@simplescalar.com). US Mail:
- * 2395 Timbercrest Court, Ann Arbor, MI 48105.
- * 
- * Copyright (C) 1994-2003 by Todd M. Austin, Ph.D. and SimpleScalar, LLC.
- */
-
-
 #ifndef BPRED_H
 #define BPRED_H
 
@@ -104,7 +53,8 @@ enum bpred_class {
   BPred2bit,			/* 2-bit saturating cntr pred (dir mapped) */
   BPredTaken,			/* static predict taken */
   BPredNotTaken,		/* static predict not taken */
-  BPred_NUM
+  BPred_NUM,
+  BPredPerceptron /* perceptron predictor */
 };
 
 /* an entry in a BTB */
@@ -131,6 +81,9 @@ struct bpred_dir_t {
       int *shiftregs;		/* level-1 history table */
       unsigned char *l2table;	/* level-2 prediction state table */
     } two;
+    struct {
+      /* Need to add perceptron stuff here */ 
+    } perceptron;
   } config;
 };
 
@@ -197,7 +150,11 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	     unsigned int xor,		/* history xor address flag */
 	     unsigned int btb_sets,	/* number of sets in BTB */ 
 	     unsigned int btb_assoc,	/* BTB associativity */
-	     unsigned int retstack_size);/* num entries in ret-addr stack */
+	     unsigned int retstack_size, /* num entries in ret-addr stack */
+
+       /* Added for Perceptron */
+       unsigned int weight_table_size, /* weight table size */
+       unsigned int weight_table_bits); /* length of weights in bits */
 
 /* create a branch direction predictor */
 struct bpred_dir_t *		/* branch direction predictor instance */

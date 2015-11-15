@@ -24,7 +24,11 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	     unsigned int xor,  	/* history xor address flag */
 	     unsigned int btb_sets,	/* number of sets in BTB */ 
 	     unsigned int btb_assoc,	/* BTB associativity */
-	     unsigned int retstack_size) /* num entries in ret-addr stack */
+	     unsigned int retstack_size, /* num entries in ret-addr stack */
+
+       /* Added for Perceptron */
+       unsigned int weight_table_size, /* weight table size */
+       unsigned int weight_table_bits) /* length of weights in bits */
 {
   struct bpred_t *pred;
 
