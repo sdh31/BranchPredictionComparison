@@ -72,10 +72,10 @@ static int twolev_nelt = 4;
 static int twolev_config[4] =
   { /* l1size */1, /* l2size */1024, /* hist */8, /* xor */FALSE};
 
-/* Perceptron Predictor Config (<weight_table_size> <weight_bits> <hist_size>)*/
-static int perceptron_nelt = 3;
-static int perceptron_config[3] = 
-  { /* weight table size */ 512, /* weight bits */ 8, /* hist size */ 8};
+/* Perceptron Predictor Config (<weight_table_entries> <weight_bits> <hist_table_size> <hist_length>)*/
+static int perceptron_nelt = 4;
+static int perceptron_config[4] = 
+  { /* weight table entries */ 512, /* weight bits */ 8, /* BHR entries */ 1, /* BHR length */ 8};
 
 /* combining predictor config (<meta_table_size> */
 static int comb_nelt = 1;
@@ -631,7 +631,7 @@ sim_reg_options(struct opt_odb_t *odb)
 
   opt_reg_int_list(odb, "-bpred:perceptron",
                    "perceptron predictor config "
-       "(<weight_table_size> <weight_bits> <hist_table_size> <hist_length>)",
+       "(<weight_table_entries> <weight_bits> <hist_table_size> <hist_length>)",
                    perceptron_config, perceptron_nelt, &perceptron_nelt,
        /* default */perceptron_config,
                    /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
@@ -895,7 +895,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* ret-addr stack size */ras_size,
 
         /* Added for Perceptron */
-        /* weight table size */0,
+        /* weight table entries */0,
         /* weight table length */0);  
     }
   else if (!mystricmp(pred_type, "2lev"))
@@ -918,7 +918,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* ret-addr stack size */ras_size,
                                   
         /* Added for Perceptron */
-        /* weight table size */0,
+        /* weight table entries */0,
         /* weight table length */0);  
     }
 
@@ -927,12 +927,12 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
     {
       /* perceptron predictor, bpred_create() checks args */
       if (perceptron_nelt != 4)
-  fatal("bad perceptron pred config (<weight_table_size> <weight_bits> <hist_table_size> <hist_length>)");
+  fatal("bad perceptron pred config (<weight_table_entries> <weight_bits> <hist_table_size> <hist_length>)");
       if (btb_nelt != 2)
   fatal("bad btb config (<num_sets> <associativity>)");
 
       /* FIXME: MAKE PERCEPTRON BPRED CLASS */ 
-      pred = bpred_create(BPred2Level,
+      pred = bpred_create(BPredPerceptron,
         /* bimod table size */0,
         /* 2lev l1 size */perceptron_config[2], /* history table of perceptron = l1 of 2 level */
         /* 2lev l2 size */0,
@@ -944,7 +944,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
         /* ret-addr stack size */ras_size,
 
         /* Added for Perceptron */
-        /* weight table size */perceptron_config[0],
+        /* weight table entries */perceptron_config[0],
         /* weight table length */perceptron_config[1]);     
 
     } 
@@ -973,7 +973,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* ret-addr stack size */ras_size,
                                   
         /* Added for Perceptron */
-        /* weight table size */0,
+        /* weight table entries */0,
         /* weight table length */0);  
     }
   else
