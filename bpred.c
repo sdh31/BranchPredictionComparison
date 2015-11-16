@@ -552,8 +552,38 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
     /* Added Perceptron Case for Look-Up */
     case BPredPerceptron:
     {
-      
+      int index, i, sum, output;
+      int product[512];
+      int *entry;
+
+      /* Get the right index */ 
+      index = (baddr >> MD_BR_SHIFT) & (pred_dir->config.perceptron.weight_table_entry - 1);
+      pred_dir -> config.perceptron.branch_index = index;
+
+      /* Initialize sum, output, product */
+      sum = 0;
+      output = 0;
+      product[0] = 0;
+
+      /* Set bias output */
+      pred_dir -> config.perceptron.BHR_table[0] = 1; 
+
+      /* Calculate the predictions */
+      for (i = 0; i < pred_dir -> config.perceptron.BHR_length; i++){
+        product[i] = (pred_dir -> config.perceptron.weights_table[index][i]) *
+                      (pred_dir -> config.perceptron.BHR_table[i]);
+        output += product[i];
+      }
+
+      /* Add the output */
+      pred_dir -> config.perceptron.perceptron_prediction = output;
+
+      /* Update the pointer */
+      p = &pred_dir -> config.perceptron.weights_table[index][i];
+
     }
+    
+    break;
 
     case BPredTaken:
     case BPredNotTaken:
