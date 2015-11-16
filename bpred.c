@@ -59,6 +59,12 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 
     break;
 
+  case BPredPerceptron:
+    /* Fix this here */
+    pred->dirpred.twolev = 
+      bpred_dir_create(class, weight_table_size, weight_table_bits, shift_width, 0);
+
+
   case BPred2bit:
     pred->dirpred.bimod = 
       bpred_dir_create(class, bimod_size, 0, 0, 0);
@@ -77,6 +83,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
   case BPredComb:
   case BPred2Level:
   case BPred2bit:
+  case BPredPerceptron: /* added perceptron */ 
     {
       int i;
 
@@ -206,6 +213,38 @@ bpred_dir_create (
 
     break;
 
+  /* Perceptron Case Added */
+  case BPredPerceptron:
+    if (!l1size)
+      fatal("perceptron table size should be postive, non-zero number");
+    if (!l2size)
+      fatal("perceptron table entry bits should be positive, non-zero number");
+    if (!shift_width)
+      fatal("BHR bit size should be positive, non-zero number";)
+    
+    pred_dir -> config.perceptron.weight_table_entry = l1size;
+    pred_dir -> config.perceptron.weight_table_length = l2size;
+    pred_dir -> config.perceptron.BHR_entry = 1; // FIX ME: make it so you can change this param
+    pred_dir -> config.perceptron.BHR_length = shift_width;
+
+    /* initialize weight table and BHR */ 
+
+    int i,j;
+
+    for (i = 0; i < pred_dir -> config.perceptron.branch_index; i++){
+      for (j = 0; j < shift_width; j++){
+        /* weight table initialized to zero */
+        pred_dir -> config.perceptron.weights_table[i][j] = 0;
+      }
+    }
+
+    for (cnt = 0; cnt < shift_width; cnt++){
+      pred_dir -> config.perceptron.BHR_table[cnt] = 1;
+    }
+
+    break;
+
+
   case BPredTaken:
   case BPredNotTaken:
     /* no other state */
@@ -236,6 +275,14 @@ bpred_dir_config(
   case BPred2bit:
     fprintf(stream, "pred_dir: %s: 2-bit: %d entries, direct-mapped\n",
       name, pred_dir->config.bimod.size);
+    break;
+
+  case BPredPerceptron:
+    fprintf(stream,
+      "pred_dir: %s: %d weight table entries, %d weight bits length, 
+      %d BHR length\n",
+      name, pred_dir->config.perceptron.weight_table_entry, pred_dir->config.perceptron.weight_table_bits,
+      pred_dir->config.perceptron.BHR_length);
     break;
 
   case BPredTaken:
@@ -280,6 +327,14 @@ bpred_config(struct bpred_t *pred,	/* branch predictor instance */
     fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
     break;
 
+  /* Added Perceptron Configuration */ 
+  case BPredPerceptron:
+    bpred_dir_config (pred->dirpred.twolev, "perceptron", stream);
+    fprintf(stream, "btb: %d sets x %d associativity", 
+      pred->btb.sets, pred->btb.assoc);
+    fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
+    break;
+
   case BPredTaken:
     bpred_dir_config (pred->dirpred.bimod, "taken", stream);
     break;
@@ -321,6 +376,10 @@ bpred_reg_stats(struct bpred_t *pred,	/* branch predictor instance */
       break;
     case BPred2bit:
       name = "bpred_bimod";
+      break;
+    /* Added perceptron case */
+    case BPredPerceptron:
+      name = "bpred_perceptron";
       break;
     case BPredTaken:
       name = "bpred_taken";
@@ -489,6 +548,13 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
     case BPred2bit:
       p = &pred_dir->config.bimod.table[BIMOD_HASH(pred_dir, baddr)];
       break;
+
+    /* Added Perceptron Case for Look-Up */
+    case BPredPerceptron:
+    {
+      
+    }
+
     case BPredTaken:
     case BPredNotTaken:
       break;

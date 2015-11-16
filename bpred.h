@@ -82,7 +82,7 @@ struct bpred_dir_t {
       unsigned char *l2table;	/* level-2 prediction state table */
     } two;
     struct {
-      /* Need to add perceptron stuff here */
+      /* Fix This */
       //<weight_table_entries> <weight_bits> <hist_table_size> <hist_length>
       int weight_table_entry;
       int weight_table_length; /* bits of weight table */
@@ -90,8 +90,8 @@ struct bpred_dir_t {
       int BHR_entry; /* 1 for global, other for local */
       int perceptron_prediction; 
 
-      signed int weights_table[500][500]; // fix me
-      signed int masks_table[100]; // fix me
+      signed int weights_table[512][512]; // fix me (made it big enough)
+      signed int BHR_table[65536]; // fix me
       int branch_index; 
     } perceptron;
   } config;
