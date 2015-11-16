@@ -582,7 +582,7 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
       p = &pred_dir -> config.perceptron.weights_table[index][i];
 
     }
-    
+
     break;
 
     case BPredTaken:
@@ -655,6 +655,7 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 	}
       break;
     case BPred2Level:
+    case BPredPerceptron: /* Added Perceptron */
       if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
 	{
 	  dir_update_ptr->pdir1 =
@@ -967,15 +968,41 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
   if (dir_update_ptr->pdir1)
     {
       if (taken)
-	{
-	  if (*dir_update_ptr->pdir1 < 3)
-	    ++*dir_update_ptr->pdir1;
-	}
+    	{
+    	  if (*dir_update_ptr->pdir1 < 3)
+    	    ++*dir_update_ptr->pdir1;
+    	}
+
+      /* Perceptron Case */
+      if (pred -> class == BPredPerceptron){
+        int i, t, theta, index, output;
+
+        /* Set Theta (From Paper) */
+        theta = 1.93 * (pred -> dirpred.twolev -> config.perceptron.BHR_length) + 14;
+        index = pred -> dirpred.twolev -> config.perceptron.branch_index;
+        output = pred -> dirpred.twolev -> config.perceptron.perceptron_prediction;
+        
+        if (taken){
+          t = 1;
+        }
+
+        else{
+          t = -1;
+        }
+
+        /* Update the Perceptrons */
+        if ((abs(output) <= theta) || (output!=t)) {
+          /* Not sure about this section */
+          
+        }
+
+      }
+
       else
-	{ /* not taken */
-	  if (*dir_update_ptr->pdir1 > 0)
-	    --*dir_update_ptr->pdir1;
-	}
+    	{ /* not taken */
+    	  if (*dir_update_ptr->pdir1 > 0)
+    	    --*dir_update_ptr->pdir1;
+    	}
     }
 
   /* combining predictor also updates second predictor and meta predictor */
