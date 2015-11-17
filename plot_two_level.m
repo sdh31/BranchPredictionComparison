@@ -73,21 +73,3 @@ set(gca, 'YTickLabel', benchmarks)
 set(gca, 'XTickLabel', config)
 
 print('3d_gshare_benchmark', '-djpeg')
-
-% %% Comparing Schemes with Same Length
-% figure(3)
-% colors = ['b', 'm', 'c', 'r', 'g', 'b'];
-% syms = ['o', 'x', 's', '+', 'd', '*', 'v', 'p'];
-% MPKI_matrix = reshape(MPKI, 5, 3, 5);
-% for i=1:5
-%     for j=1:3
-%         col_index = randi(6,1);
-%         sym_index = randi(8,1);
-%         colsym = [colors(col_index), syms(sym_index)];
-%         scatter(width(1:5), MPKI_matrix(:,j,i), colsym)
-%         hold on
-%     end
-% end
-% xlabel('Width')
-% ylabel('MPKI')
-% hold off
