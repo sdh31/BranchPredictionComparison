@@ -993,6 +993,21 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
         /* Update the Perceptrons */
         if ((abs(output) <= theta) || (output!=t)) {
           /* Not sure about this section */
+          for (i=0; i < pred->dirpred.twolev -> config.perceptron.BHR_length; i++){
+            /* update the bhr */ 
+            if (pred->dirpred.bimod->config.perceptron.BHR_table[i] == 0){
+              x[i] = -1;
+            }
+            else{
+              x[i] = 1;
+            }
+            if (t == x[i]){
+              pred->dirpred.twolev->config.perceptron.weights_table[index][i]++;
+            }
+            else{
+              pred->dirpred.twolev->config.perceptron.weights_table[index][i]--;
+            }
+          }
           
         }
 
