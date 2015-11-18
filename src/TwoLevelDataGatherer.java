@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 public class TwoLevelDataGatherer {
 
-	private static final String TWO_LEVEL_DATA_FILE = "TwoLevelData.csv";
+	private static final String TWO_LEVEL_DATA_FILE = "TwoLevelDataLonger.csv";
 
 	public List<DataLine> gatherDataFromFolder(String folderName) {
 		List<DataLine> dataLines = new ArrayList<DataLine>();
