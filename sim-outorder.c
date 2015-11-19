@@ -72,10 +72,10 @@ static int twolev_nelt = 4;
 static int twolev_config[4] =
   { /* l1size */1, /* l2size */1024, /* hist */8, /* xor */FALSE};
 
-/* Perceptron Predictor Config (<weight_table_entries> <weight_bits> <hist_table_size> <hist_length>)*/
+/* Perceptron Predictor Config (<l1size> <l2size> <hist_size> <xor>)*/
 static int perceptron_nelt = 4;
 static int perceptron_config[4] = 
-  { /* weight table entries */ 512, /* weight bits */ 8, /* BHR entries */ 1, /* BHR length */ 8};
+  { /* l1size */ 512, /* l2size */ 8, /* hist */ 1, /* xor */ FALSE};
 
 /* combining predictor config (<meta_table_size> */
 static int comb_nelt = 1;
@@ -631,7 +631,7 @@ sim_reg_options(struct opt_odb_t *odb)
 
   opt_reg_int_list(odb, "-bpred:perceptron",
                    "perceptron predictor config "
-       "(<weight_table_entries> <weight_bits> <hist_table_size> <hist_length>)",
+       "(<l1size> <l2size> <hist_size> <xor>)",
                    perceptron_config, perceptron_nelt, &perceptron_nelt,
        /* default */perceptron_config,
                    /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
@@ -867,12 +867,12 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
   else if (!mystricmp(pred_type, "taken"))
     {
       /* static predictor, not taken */
-      pred = bpred_create(BPredTaken, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+      pred = bpred_create(BPredTaken, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
   else if (!mystricmp(pred_type, "nottaken"))
     {
       /* static predictor, taken */
-      pred = bpred_create(BPredNotTaken, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+      pred = bpred_create(BPredNotTaken, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
   else if (!mystricmp(pred_type, "bimod"))
     {
@@ -892,11 +892,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history xor address */0,
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
-			  /* ret-addr stack size */ras_size,
-
-        /* Added for Perceptron */
-        /* weight table entries */0,
-        /* weight table length */0);  
+			  /* ret-addr stack size */ras_size);
     }
   else if (!mystricmp(pred_type, "2lev"))
     {
@@ -915,38 +911,30 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history xor address */twolev_config[3],
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
-			  /* ret-addr stack size */ras_size,
-                                  
-        /* Added for Perceptron */
-        /* weight table entries */0,
-        /* weight table length */0);  
+			  /* ret-addr stack size */ras_size);
     }
 
   /* added perceptron argument checker */
      else if (!mystricmp(pred_type, "perceptron"))
     {
       /* perceptron predictor, bpred_create() checks args */
-      if (perceptron_nelt != 4)
-  fatal("bad perceptron pred config (<weight_table_entries> <weight_bits> <hist_table_size> <hist_length>)");
-      if (btb_nelt != 2)
-  fatal("bad btb config (<num_sets> <associativity>)");
+      if (perceptron_nelt != 4) {
+          fatal("bad perceptron pred config (<l1size> <l2size> <hist_size> <xor>)");
+      }
+      if (btb_nelt != 2) {
+          fatal("bad btb config (<num_sets> <associativity>)");
+      }
 
-      /* FIXME: MAKE PERCEPTRON BPRED CLASS */ 
       pred = bpred_create(BPredPerceptron,
         /* bimod table size */0,
-        /* 2lev l1 size */perceptron_config[2], /* history table of perceptron = l1 of 2 level */
-        /* 2lev l2 size */0,
+        /* perc. l1 size */perceptron_config[0],
+        /* perc. l2 size */perceptron_config[1],
         /* meta table size */0,
-        /* history reg size */perceptron_config[3],
-        /* history xor address */0,
+        /* history reg size */perceptron_config[2],
+        /* history xor address */perceptron_config[3],
         /* btb sets */btb_config[0],
         /* btb assoc */btb_config[1],
-        /* ret-addr stack size */ras_size,
-
-        /* Added for Perceptron */
-        /* weight table entries */perceptron_config[0],
-        /* weight table length */perceptron_config[1]);     
-
+        /* ret-addr stack size */ras_size);
     } 
 
   else if (!mystricmp(pred_type, "comb"))
@@ -970,11 +958,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history xor address */twolev_config[3],
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
-			  /* ret-addr stack size */ras_size,
-                                  
-        /* Added for Perceptron */
-        /* weight table entries */0,
-        /* weight table length */0);  
+			  /* ret-addr stack size */ras_size);
     }
   else
     fatal("cannot parse predictor type `%s'", pred_type);
@@ -4285,7 +4269,7 @@ ruu_fetch(void)
 	  /* get the next predicted fetch address; only use branch predictor
 	     result for branches (assumes pre-decode bits); NOTE: returned
 	     value may be 1 if bpred can only predict a direction */
-	  if (MD_OP_FLAGS(op) & F_CTRL)
+	  if (MD_OP_FLAGS(op) & F_CTRL) {
 	    fetch_pred_PC =
 	      bpred_lookup(pred,
 			   /* branch address */fetch_regs_PC,
@@ -4295,8 +4279,9 @@ ruu_fetch(void)
 			   /* return? */MD_IS_RETURN(op),
 			   /* updt */&(fetch_data[fetch_tail].dir_update),
 			   /* RSB index */&stack_recover_idx);
-	  else
+    } else {
 	    fetch_pred_PC = 0;
+    }
 
 	  /* valid address returned from branch predictor? */
 	  if (!fetch_pred_PC)

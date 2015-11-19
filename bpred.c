@@ -24,11 +24,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	     unsigned int xor,  	/* history xor address flag */
 	     unsigned int btb_sets,	/* number of sets in BTB */ 
 	     unsigned int btb_assoc,	/* BTB associativity */
-	     unsigned int retstack_size, /* num entries in ret-addr stack */
-
-       /* Added for Perceptron */
-       unsigned int weight_table_size, /* weight table size */
-       unsigned int weight_table_bits) /* length of weights in bits */
+	     unsigned int retstack_size) /* num entries in ret-addr stack */
 {
   struct bpred_t *pred;
 
@@ -60,10 +56,9 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
     break;
 
   case BPredPerceptron:
-    /* Fix this here */
     pred->dirpred.twolev = 
-      bpred_dir_create(class, weight_table_size, weight_table_bits, shift_width, 0);
-
+      bpred_dir_create(class, l1size, l2size, shift_width, xor);
+    break;
 
   case BPred2bit:
     pred->dirpred.bimod = 
@@ -216,34 +211,53 @@ bpred_dir_create (
   /* Perceptron Case Added */
   case BPredPerceptron:
     if (!l1size)
-      fatal("perceptron table size should be postive, non-zero number");
+      fatal("l1 size, %d should be positive, non-zero number", l1size);
     if (!l2size)
-      fatal("perceptron table entry bits should be positive, non-zero number");
+      fatal("l2 size should be positive, non-zero number");
     if (!shift_width)
-      fatal("BHR bit size should be positive, non-zero number";)
+      fatal("shift width be positive, non-zero number");
     
-    pred_dir -> config.perceptron.weight_table_entry = l1size;
-    pred_dir -> config.perceptron.weight_table_length = l2size;
-    pred_dir -> config.perceptron.BHR_entry = 1; // FIX ME: make it so you can change this param
-    pred_dir -> config.perceptron.BHR_length = shift_width;
+    pred_dir -> config.perceptron.l1size = l1size;
+    pred_dir -> config.perceptron.l2size = l2size;
+    pred_dir -> config.perceptron.shift_width = shift_width;
+    pred_dir -> config.perceptron.xor = xor;
 
     /* initialize weight table and BHR */ 
 
+    int k;
+    /* Malloc the weights table. For each entry in the l2 table, we get an int pointer to
+       a chunk of memory that holds shift_width ints */
+
+    /* allocate rows for l1 and l2*/
+    pred_dir->config.perceptron.branch_history_table = (int **) malloc(l1size * sizeof(int *));
+    pred_dir->config.perceptron.weight_table = (int **) malloc(l2size * sizeof(int *)); 
+
+    /* allocate cols for l1 */
+    for (k=0; k < l1size; k++) {
+      pred_dir->config.perceptron.branch_history_table[k] = (int *) malloc(shift_width * sizeof(int)); 
+    }
+
+    /* allocate cols for l2 */
+    for (k=0; k<l2size; k++) {
+      pred_dir->config.perceptron.weight_table[k] = (int *) malloc(shift_width * sizeof(int)); 
+    }
+
     int i,j;
 
-    for (i = 0; i < pred_dir -> config.perceptron.branch_index; i++){
+    for (i = 0; i < l1size; i++){
       for (j = 0; j < shift_width; j++){
-        /* weight table initialized to zero */
-        pred_dir -> config.perceptron.weights_table[i][j] = 0;
+        /* all BHT entries initialized to 1 (taken) */
+        pred_dir -> config.perceptron.branch_history_table[i][j] = 1;
       }
     }
 
-    for (cnt = 0; cnt < shift_width; cnt++){
-      pred_dir -> config.perceptron.BHR_table[cnt] = 1;
+    for (i = 0; i < l2size; i++){
+      for (j = 0; j < shift_width; j++){
+        /* weight table initialized to zero */
+        pred_dir -> config.perceptron.weight_table[i][j] = 0;
+      }
     }
-
     break;
-
 
   case BPredTaken:
   case BPredNotTaken:
@@ -268,7 +282,9 @@ bpred_dir_config(
   case BPred2Level:
     fprintf(stream,
       "pred_dir: %s: 2-lvl: %d l1-sz, %d bits/ent, %s xor, %d l2-sz, direct-mapped\n",
-      name, pred_dir->config.two.l1size, pred_dir->config.two.shift_width,
+      name,
+      pred_dir->config.two.l1size,
+      pred_dir->config.two.shift_width,
       pred_dir->config.two.xor ? "" : "no", pred_dir->config.two.l2size);
     break;
 
@@ -279,10 +295,11 @@ bpred_dir_config(
 
   case BPredPerceptron:
     fprintf(stream,
-      "pred_dir: %s: %d weight table entries, %d weight bits length, 
-      %d BHR length\n",
-      name, pred_dir->config.perceptron.weight_table_entry, pred_dir->config.perceptron.weight_table_bits,
-      pred_dir->config.perceptron.BHR_length);
+      "pred_dir: %s: perceptron: %d l1-sz, %d bits/ent, %s xor, %d l2-sz\n",
+      name,
+      pred_dir->config.perceptron.l1size,
+      pred_dir->config.perceptron.shift_width,
+      pred_dir->config.perceptron.xor ? "" : "no", pred_dir->config.perceptron.l2size);
     break;
 
   case BPredTaken:
@@ -552,26 +569,29 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
     /* Added Perceptron Case for Look-Up */
     case BPredPerceptron:
     {
-      int index, i, sum, output;
+      int l1index, l2index, i, sum, output, l1_value;
       int product[512];
-      int *entry;
-
       /* Get the right index */ 
-      index = (baddr >> MD_BR_SHIFT) & (pred_dir->config.perceptron.weight_table_entry - 1);
-      pred_dir -> config.perceptron.branch_index = index;
+
+      l1index = (baddr >> MD_BR_SHIFT) & (pred_dir->config.perceptron.l1size - 1);
+      l2index = (baddr >> MD_BR_SHIFT) & (pred_dir->config.perceptron.l2size - 1);
+
+      pred_dir -> config.perceptron.l1index = l1index;
+      pred_dir -> config.perceptron.l2index = l2index;
+
 
       /* Initialize sum, output, product */
       sum = 0;
       output = 0;
       product[0] = 0;
 
-      /* Set bias output */
-      pred_dir -> config.perceptron.BHR_table[0] = 1; 
+      /* Set bias input, per the papse */
+      pred_dir -> config.perceptron.branch_history_table[l1index][0] = 1; 
 
       /* Calculate the predictions */
-      for (i = 0; i < pred_dir -> config.perceptron.BHR_length; i++){
-        product[i] = (pred_dir -> config.perceptron.weights_table[index][i]) *
-                      (pred_dir -> config.perceptron.BHR_table[i]);
+      for (i = 0; i < pred_dir -> config.perceptron.shift_width; i++){
+        l1_value = pred_dir->config.perceptron.branch_history_table[l1index][i];
+        product[i] = (pred_dir -> config.perceptron.weight_table[l2index][i]) * l1_value;
         output += product[i];
       }
 
@@ -579,8 +599,13 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
       pred_dir -> config.perceptron.perceptron_prediction = output;
 
       /* Update the pointer */
-      p = &pred_dir -> config.perceptron.weights_table[index][i];
-
+      unsigned char* result_char = calloc(1, sizeof(unsigned char));
+      if (output > 0) {
+        *result_char = 2;
+      } else {
+        *result_char = 0;
+      }
+      p = result_char;
     }
 
     break;
@@ -656,11 +681,9 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
       break;
     case BPred2Level:
     case BPredPerceptron: /* Added Perceptron */
-      if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
-	{
-	  dir_update_ptr->pdir1 =
-	    bpred_dir_lookup (pred->dirpred.twolev, baddr);
-	}
+      if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
+	       dir_update_ptr->pdir1 = bpred_dir_lookup (pred->dirpred.twolev, baddr);
+	    }   
       break;
     case BPred2bit:
       if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
@@ -975,44 +998,45 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 
       /* Perceptron Case */
       if (pred -> class == BPredPerceptron){
-        int i, t, theta, index, output;
+        int i, t, theta, output;
 
         /* Set Theta (From Paper) */
-        theta = 1.93 * (pred -> dirpred.twolev -> config.perceptron.BHR_length) + 14;
-        index = pred -> dirpred.twolev -> config.perceptron.branch_index;
+        theta = 1.93 * (pred -> dirpred.twolev -> config.perceptron.shift_width) + 14;
+        int l1index = pred -> dirpred.twolev -> config.perceptron.l1index;
+        int l2index = pred -> dirpred.twolev -> config.perceptron.l2index;
         output = pred -> dirpred.twolev -> config.perceptron.perceptron_prediction;
-        
         if (taken){
           t = 1;
-        }
-
-        else{
+        } else {
           t = -1;
         }
 
-        /* Update the Perceptrons */
-        if ((abs(output) <= theta) || (output!=t)) {
-          /* Not sure about this section */
-          for (i=0; i < pred->dirpred.twolev -> config.perceptron.BHR_length; i++){
-            /* update the bhr */ 
-            if (pred->dirpred.bimod->config.perceptron.BHR_table[i] == 0){
-              x[i] = -1;
-            }
-            else{
-              x[i] = 1;
-            }
-            if (t == x[i]){
-              pred->dirpred.twolev->config.perceptron.weights_table[index][i]++;
-            }
-            else{
-              pred->dirpred.twolev->config.perceptron.weights_table[index][i]--;
-            }
-          }
-          
+        int output_sign;
+        if (output > 0) {
+          output_sign = 1;
+        } else {
+          output_sign = -1;
         }
 
-      }
-
+        /* Update the Perceptrons */
+        if ((output_sign != t) || (abs(output) <= theta)) {
+          /* Update weights */
+          for (i=0; i < pred->dirpred.twolev -> config.perceptron.shift_width; i++){
+            /* if branch outcome agrees, increment weight */
+            if (t == pred->dirpred.twolev -> config.perceptron.branch_history_table[l1index][i]){
+              pred->dirpred.twolev->config.perceptron.weight_table[l2index][i]++;
+            } else {
+              pred->dirpred.twolev->config.perceptron.weight_table[l2index][i]--;
+            }
+          }
+        }
+        /* update the BHT */
+        for (i = pred->dirpred.twolev -> config.perceptron.shift_width - 1; i >= 2; i--) {
+           int priorVal = pred->dirpred.twolev->config.perceptron.branch_history_table[l1index][i-1];
+           pred->dirpred.twolev->config.perceptron.branch_history_table[l1index][i] = priorVal;
+        }
+        pred->dirpred.twolev->config.perceptron.branch_history_table[l1index][1] = t;
+      } /* end of perceptron code */
       else
     	{ /* not taken */
     	  if (*dir_update_ptr->pdir1 > 0)

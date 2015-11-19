@@ -84,15 +84,19 @@ struct bpred_dir_t {
     struct {
       /* Fix This */
       //<weight_table_entries> <weight_bits> <hist_table_size> <hist_length>
-      int weight_table_entry;
-      int weight_table_length; /* bits of weight table */
-      int BHR_length; 
-      int BHR_entry; /* 1 for global, other for local */
+      int l1size; /* level-1 size, number of history registers. Typical implementation has only 1 */
+      int l2size; /* level-2 size, number of row-entries on the weights table */
+      int shift_width; /* number of history bits to keep in a branch history reigster */
+      int xor;
+
       int perceptron_prediction; 
 
-      signed int weights_table[512][512]; // fix me (made it big enough)
-      signed int BHR_table[65536]; // fix me
-      int branch_index; 
+      int **branch_history_table;   /* level-1 history table */
+
+      signed int **weight_table;       /* level-2, 2-D array weight_table */
+
+      int l1index;
+      int l2index; 
     } perceptron;
   } config;
 };
@@ -160,11 +164,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	     unsigned int xor,		/* history xor address flag */
 	     unsigned int btb_sets,	/* number of sets in BTB */ 
 	     unsigned int btb_assoc,	/* BTB associativity */
-	     unsigned int retstack_size, /* num entries in ret-addr stack */
-
-       /* Added for Perceptron */
-       unsigned int weight_table_size, /* weight table size */
-       unsigned int weight_table_bits); /* length of weights in bits */
+	     unsigned int retstack_size); /* num entries in ret-addr stack */
 
 /* create a branch direction predictor */
 struct bpred_dir_t *		/* branch direction predictor instance */
