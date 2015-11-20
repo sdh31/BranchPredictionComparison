@@ -55,10 +55,10 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 
     break;
 
+  /* Perceptron should create a two level predictor, as it essentially has that structure */
   case BPredPerceptron:
-    pred->dirpred.twolev = 
-      bpred_dir_create(class, l1size, l2size, shift_width, xor);
-    break;
+    pred->dirpred.twolev = bpred_dir_create(class, l1size, l2size, shift_width, xor);
+  break;
 
   case BPred2bit:
     pred->dirpred.bimod = 
@@ -217,20 +217,20 @@ bpred_dir_create (
     if (!shift_width)
       fatal("shift width be positive, non-zero number");
     
+    /* add perceptron parameters to the struct */
     pred_dir -> config.perceptron.l1size = l1size;
     pred_dir -> config.perceptron.l2size = l2size;
     pred_dir -> config.perceptron.shift_width = shift_width;
     pred_dir -> config.perceptron.xor = xor;
 
-    /* initialize weight table and BHR */ 
+    /* Initializing the branch_history_table & weight_table */ 
 
-    int k;
-    /* Malloc the weights table. For each entry in the l2 table, we get an int pointer to
-       a chunk of memory that holds shift_width ints */
-
-    /* allocate rows for l1 and l2*/
+    /* Allocate the row pointers for the l1 and l2 */
     pred_dir->config.perceptron.branch_history_table = (int **) malloc(l1size * sizeof(int *));
     pred_dir->config.perceptron.weight_table = (int **) malloc(l2size * sizeof(int *)); 
+
+
+    int k;
 
     /* allocate cols for l1 */
     for (k=0; k < l1size; k++) {
@@ -569,30 +569,23 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
     /* Added Perceptron Case for Look-Up */
     case BPredPerceptron:
     {
-      int l1index, l2index, i, sum, output, l1_value;
-      int product[512];
-      /* Get the right index */ 
+      int l1index, l2index, i, output, l1_value;
 
+      /* Get the right index */ 
       l1index = (baddr >> MD_BR_SHIFT) & (pred_dir->config.perceptron.l1size - 1);
       l2index = (baddr >> MD_BR_SHIFT) & (pred_dir->config.perceptron.l2size - 1);
-
       pred_dir -> config.perceptron.l1index = l1index;
       pred_dir -> config.perceptron.l2index = l2index;
 
 
-      /* Initialize sum, output, product */
-      sum = 0;
-      output = 0;
-      product[0] = 0;
-
-      /* Set bias input, per the papse */
+      /* Set bias input, per the paper */
       pred_dir -> config.perceptron.branch_history_table[l1index][0] = 1; 
 
       /* Calculate the predictions */
-      for (i = 0; i < pred_dir -> config.perceptron.shift_width; i++){
+      output = 0;
+      for (i = 0; i < pred_dir -> config.perceptron.shift_width; i++) {
         l1_value = pred_dir->config.perceptron.branch_history_table[l1index][i];
-        product[i] = (pred_dir -> config.perceptron.weight_table[l2index][i]) * l1_value;
-        output += product[i];
+        output += (pred_dir -> config.perceptron.weight_table[l2index][i]) * l1_value;
       }
 
       /* Add the output */
@@ -1004,6 +997,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
         theta = 1.93 * (pred -> dirpred.twolev -> config.perceptron.shift_width) + 14;
         int l1index = pred -> dirpred.twolev -> config.perceptron.l1index;
         int l2index = pred -> dirpred.twolev -> config.perceptron.l2index;
+        
         output = pred -> dirpred.twolev -> config.perceptron.perceptron_prediction;
         if (taken){
           t = 1;
@@ -1019,6 +1013,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
         }
 
         /* Update the Perceptrons */
+        /* if we have mispredicted, or not enough training has been done */
         if ((output_sign != t) || (abs(output) <= theta)) {
           /* Update weights */
           for (i=0; i < pred->dirpred.twolev -> config.perceptron.shift_width; i++){

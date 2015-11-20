@@ -82,21 +82,26 @@ struct bpred_dir_t {
       unsigned char *l2table;	/* level-2 prediction state table */
     } two;
     struct {
-      /* Fix This */
-      //<weight_table_entries> <weight_bits> <hist_table_size> <hist_length>
-      int l1size; /* level-1 size, number of history registers. Typical implementation has only 1 */
-      int l2size; /* level-2 size, number of row-entries on the weights table */
-      int shift_width; /* number of history bits to keep in a branch history reigster */
-      int xor;
+      // <l1size> <l2size> <hist_length> <xor>
+      int l1size;         /* level-1 size, number of history registers. Typical implementation has only 1 */
+      int l2size;         /* level-2 size, number of row-entries on the weights table */
+      int shift_width;    /* number of history bits to keep in a branch history reigster */
+      int xor;            /* are we going to implement xor? */
 
       int perceptron_prediction; 
-
-      int **branch_history_table;   /* level-1 history table */
-
-      signed int **weight_table;       /* level-2, 2-D array weight_table */
-
       int l1index;
       int l2index; 
+
+      /* Level 1 History Table.
+         Rows represent where a specific PC indexes to,
+         Cols represent a taken (1) / not taken (-1) decision */
+      signed int **branch_history_table; 
+
+      /* Level 2 Weight Table.
+         Rows represent where a specific PC indexes to,
+         Cols represent a weight */
+      signed int **weight_table; 
+
     } perceptron;
   } config;
 };

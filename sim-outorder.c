@@ -75,7 +75,7 @@ static int twolev_config[4] =
 /* Perceptron Predictor Config (<l1size> <l2size> <hist_size> <xor>)*/
 static int perceptron_nelt = 4;
 static int perceptron_config[4] = 
-  { /* l1size */ 512, /* l2size */ 8, /* hist */ 1, /* xor */ FALSE};
+  { /* l1size */ 1, /* l2size */ 512, /* hist */ 8, /* xor */ FALSE};
 
 /* combining predictor config (<meta_table_size> */
 static int comb_nelt = 1;
