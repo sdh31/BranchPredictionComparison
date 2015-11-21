@@ -991,9 +991,10 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 
       /* Perceptron Case */
       if (pred -> class == BPredPerceptron){
-        int i, t, theta, output;
-
+        int i, t, output;
+        double theta;
         /* Set Theta (From Paper) */
+
         theta = 1.93 * (pred -> dirpred.twolev -> config.perceptron.shift_width) + 14;
         int l1index = pred -> dirpred.twolev -> config.perceptron.l1index;
         int l2index = pred -> dirpred.twolev -> config.perceptron.l2index;
