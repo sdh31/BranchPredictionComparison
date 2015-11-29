@@ -54,7 +54,8 @@ enum bpred_class {
   BPredTaken,			/* static predict taken */
   BPredNotTaken,		/* static predict not taken */
   BPred_NUM,
-  BPredPerceptron /* perceptron predictor */
+  BPredPerceptron, /* perceptron predictor */
+  BPredPiecewiseLinear
 };
 
 /* an entry in a BTB */
@@ -103,6 +104,33 @@ struct bpred_dir_t {
       signed int **weight_table; 
 
     } perceptron;
+
+    struct {
+
+      md_addr_t baddr;
+      int n_size;         
+      int m_size;         
+      int shift_width;    /* number of history bits to keep in a branch history reigster */
+      int xor;            /* are we going to implement xor? */
+
+      int piecewise_prediction; 
+      int n_index;
+      int m_index; 
+      int output;
+
+
+      /* Level 1 History Table. There will be one row, and
+         cols represent a taken (1) / not taken (-1) decision */
+      signed int **branch_history_table; 
+
+      /* array of addresses, m_size in length */
+      md_addr_t *GA;
+
+      /* Level 2 Weight Table. */
+      signed int ***weight_table; 
+
+    } piecewise_linear;
+
   } config;
 };
 

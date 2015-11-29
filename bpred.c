@@ -60,6 +60,11 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
     pred->dirpred.twolev = bpred_dir_create(class, l1size, l2size, shift_width, xor);
   break;
 
+  case BPredPiecewiseLinear:
+    /* here, l1size = n, l2size = m */
+    pred->dirpred.twolev = bpred_dir_create(class, l1size, l2size, shift_width, xor);
+  break;
+
   case BPred2bit:
     pred->dirpred.bimod = 
       bpred_dir_create(class, bimod_size, 0, 0, 0);
@@ -79,6 +84,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
   case BPred2Level:
   case BPred2bit:
   case BPredPerceptron: /* added perceptron */ 
+  case BPredPiecewiseLinear: /* added piecewise linear */
     {
       int i;
 
@@ -259,6 +265,66 @@ bpred_dir_create (
     }
     break;
 
+  case BPredPiecewiseLinear:
+    if (!l1size)
+      fatal("l1 size, %d should be positive, non-zero number", l1size);
+    if (!l2size)
+      fatal("l2 size should be positive, non-zero number");
+    if (!shift_width)
+      fatal("shift width be positive, non-zero number");
+
+    int n_size = l1size;
+    int m_size = l2size;
+
+    /* add piecewise linear parameters to the struct */
+    pred_dir -> config.piecewise_linear.n_size = n_size;
+    pred_dir -> config.piecewise_linear.m_size = m_size;
+    pred_dir -> config.piecewise_linear.shift_width = shift_width;
+    pred_dir -> config.piecewise_linear.xor = xor;
+
+    /******* Branch History Table Allocation *******
+             NOTE: Defaulting this to one row, so a global BHT */
+    pred_dir->config.piecewise_linear.branch_history_table = (int **) malloc(1 * sizeof(int *));
+    /* Allocate columns for this one row */
+    pred_dir->config.piecewise_linear.branch_history_table[0] = (int *) malloc(shift_width * sizeof(int)); 
+
+    for (j = 0; j < shift_width; j++){
+        /* all BHT entries initialized to 1 (taken) */
+        pred_dir -> config.piecewise_linear.branch_history_table[0][j] = 1;
+    }
+
+    /******* End of Branch History Table Allocation *******/
+
+    /******* 3D Weight Table Allocation *******/
+    pred_dir->config.piecewise_linear.weight_table = (int ***) malloc(n_size * sizeof(int **)); 
+
+    for (i=0; i < n_size; i++) {
+      pred_dir->config.piecewise_linear.weight_table[i] = (int **) malloc(m_size * sizeof(int *)); 
+      
+      for (j=0; j < m_size; j++) {
+        pred_dir->config.piecewise_linear.weight_table[i][j] = (int *) malloc((1 + shift_width) * sizeof(int)); 
+
+        /* weight table initialized to zero */
+        for (k = 0; k < 1 + shift_width; k++) {
+           pred_dir -> config.piecewise_linear.weight_table[i][j][k] = 0;
+        }
+
+      }
+    }
+    /******* End of Weight Table Allocation *******/
+
+    /******* Allocate and Initialize GA Array *******/
+
+    pred_dir->config.piecewise_linear.GA = (md_addr_t *) malloc(m_size * sizeof(md_addr_t)); 
+
+    for (k = 0; k < m_size; k++) {
+      pred_dir->config.piecewise_linear.GA[k] = 0x00000000;
+    }
+
+    /******* End of GA Array Allocation *******/
+
+    break;
+
   case BPredTaken:
   case BPredNotTaken:
     /* no other state */
@@ -300,6 +366,15 @@ bpred_dir_config(
       pred_dir->config.perceptron.l1size,
       pred_dir->config.perceptron.shift_width,
       pred_dir->config.perceptron.xor ? "" : "no", pred_dir->config.perceptron.l2size);
+    break;
+
+  case BPredPiecewiseLinear:
+    fprintf(stream,
+      "pred_dir: %s: perceptron: %d m-sz, %d bits/ent, %s xor, %d n-sz\n",
+      name,
+      pred_dir->config.piecewise_linear.n_size,
+      pred_dir->config.piecewise_linear.shift_width,
+      pred_dir->config.piecewise_linear.xor ? "" : "no", pred_dir->config.piecewise_linear.m_size);
     break;
 
   case BPredTaken:
@@ -344,8 +419,9 @@ bpred_config(struct bpred_t *pred,	/* branch predictor instance */
     fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
     break;
 
-  /* Added Perceptron Configuration */ 
+  /* Added Perceptron & Piecewise Linear Configuration */ 
   case BPredPerceptron:
+  case BPredPiecewiseLinear:
     bpred_dir_config (pred->dirpred.twolev, "perceptron", stream);
     fprintf(stream, "btb: %d sets x %d associativity", 
       pred->btb.sets, pred->btb.assoc);
@@ -397,6 +473,10 @@ bpred_reg_stats(struct bpred_t *pred,	/* branch predictor instance */
     /* Added perceptron case */
     case BPredPerceptron:
       name = "bpred_perceptron";
+      break;
+    /* Added piecewise linear case */
+    case BPredPiecewiseLinear:
+      name = "bpred_piecewise_linear";
       break;
     case BPredTaken:
       name = "bpred_taken";
@@ -600,6 +680,45 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
       }
       p = result_char;
     }
+    break;
+
+    case BPredPiecewiseLinear:
+    {
+
+      int i_index, j_index, shift_width, output;
+
+      i_index = (baddr >> MD_BR_SHIFT) & (pred_dir->config.piecewise_linear.n_size - 1);
+      shift_width = pred_dir -> config.piecewise_linear.shift_width;
+
+      pred_dir -> config.piecewise_linear.n_index = i_index;
+      pred_dir -> config.piecewise_linear.baddr = baddr;
+
+      output = pred_dir -> config.piecewise_linear.weight_table[i_index][0][0];
+
+      int i = 0;
+      for (i = 0; i < shift_width; i++) {
+        md_addr_t j_addr = pred_dir->config.piecewise_linear.GA[i];
+        j_index = (j_addr >> MD_BR_SHIFT) & (pred_dir->config.piecewise_linear.m_size - 1);
+
+        if (pred_dir -> config.piecewise_linear.branch_history_table[0][i] == 1) {
+          output = output + pred_dir -> config.piecewise_linear.weight_table[i_index][j_index][i + 1];
+        } else {
+          output = output - pred_dir -> config.piecewise_linear.weight_table[i_index][j_index][i + 1];
+        }
+      }
+
+      pred_dir -> config.piecewise_linear.output = output;
+
+      /* Update the pointer */
+      unsigned char* result_char = calloc(1, sizeof(unsigned char));
+      if (output >= 0) {
+        *result_char = 2;
+      } else {
+        *result_char = 0;
+      }
+      p = result_char;
+    }
+
 
     break;
 
@@ -674,6 +793,7 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
       break;
     case BPred2Level:
     case BPredPerceptron: /* Added Perceptron */
+    case BPredPiecewiseLinear: /* Added Piecewise Linear */
       if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 	       dir_update_ptr->pdir1 = bpred_dir_lookup (pred->dirpred.twolev, baddr);
 	    }   
@@ -1032,9 +1152,68 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
            pred->dirpred.twolev->config.perceptron.branch_history_table[l1index][i] = priorVal;
         }
         pred->dirpred.twolev->config.perceptron.branch_history_table[l1index][1] = t;
-      } /* end of perceptron code */
-      else
-    	{ /* not taken */
+      } 
+      else if (pred -> class == BPredPiecewiseLinear) {
+        int output, n_size, m_size, shift_width;
+        output = pred -> dirpred.twolev -> config.piecewise_linear.output;
+        n_size = pred -> dirpred.twolev -> config.piecewise_linear.n_size;
+        m_size = pred -> dirpred.twolev -> config.piecewise_linear.m_size;
+        shift_width = pred -> dirpred.twolev -> config.piecewise_linear.shift_width;
+
+        /* Set Theta (From Paper) */
+        double theta;
+        theta = 2.14 * (shift_width + 1) + 20.58;
+
+        int t;
+        if (taken){
+          t = 1;
+        } else {
+          t = -1;
+        }
+
+        int output_sign;
+        if (output >= 0) {
+          output_sign = 1;
+        } else {
+          output_sign = -1;
+        }
+
+        int n_index = pred -> dirpred.twolev -> config.piecewise_linear.n_index;
+
+        if (output_sign != t || abs(output) < theta) {
+          if (taken) {
+            pred -> dirpred.twolev -> config.piecewise_linear.weight_table[n_index][0][0]++;
+          } else {
+            pred -> dirpred.twolev -> config.piecewise_linear.weight_table[n_index][0][0]--;
+          }
+          int i;
+          for (i = 0; i < shift_width; i ++) {
+            md_addr_t j_addr = pred->dirpred.twolev->config.piecewise_linear.GA[i];
+            int m_index = (j_addr >> MD_BR_SHIFT) & (m_size - 1);
+            if (pred -> dirpred.twolev -> config.piecewise_linear.branch_history_table[0][i] == 1) {
+              pred -> dirpred.twolev -> config.piecewise_linear.weight_table[n_index][m_index][i + 1]++;
+            } else {
+              pred -> dirpred.twolev -> config.piecewise_linear.weight_table[n_index][m_index][i + 1]--;
+            }
+          }
+        }
+
+        /* shift over GA array */
+        for (i = m_size - 1; i >= 1; i--) {
+           md_addr_t priorVal = pred->dirpred.twolev->config.piecewise_linear.GA[i-1];
+           pred->dirpred.twolev->config.piecewise_linear.GA[i] = priorVal;
+        }
+        md_addr_t baddr = pred->dirpred.twolev->config.piecewise_linear.baddr;
+        pred->dirpred.twolev->config.piecewise_linear.GA[0] = baddr;
+
+        /* shift over BHT array */
+        for (i = shift_width - 1; i >= 1; i--) {
+           int priorVal = pred->dirpred.twolev->config.piecewise_linear.branch_history_table[0][i-1];
+           pred->dirpred.twolev->config.piecewise_linear.branch_history_table[0][i] = priorVal;
+        }
+        pred->dirpred.twolev->config.piecewise_linear.branch_history_table[0][0] = t;
+
+      } else { /* not taken */
     	  if (*dir_update_ptr->pdir1 > 0)
     	    --*dir_update_ptr->pdir1;
     	}
