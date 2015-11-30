@@ -219,7 +219,7 @@ bpred_dir_create (
     break;
 
   /* Perceptron Case Added */
-  case BPredPerceptron:
+  case BPredPerceptron: {
     if (!l1size)
       fatal("l1 size, %d should be positive, non-zero number", l1size);
     if (!l2size)
@@ -268,8 +268,9 @@ bpred_dir_create (
       }
     }
     break;
+  }
 
-  case BPredPiecewiseLinear:
+  case BPredPiecewiseLinear: {
     if (!l1size)
       fatal("m size, %d should be positive, non-zero number", l1size);
     if (!l2size)
@@ -279,6 +280,7 @@ bpred_dir_create (
 
     int n_size = l1size;
     int m_size = l2size;
+    int i, j, k;
 
     /* add piecewise linear parameters to the struct */
     pred_dir -> config.piecewise_linear.n_size = n_size;
@@ -327,8 +329,8 @@ bpred_dir_create (
     }
 
     /******* End of GA Array Allocation *******/
-
     break;
+  }
 
   case BPredTaken:
   case BPredNotTaken:
