@@ -112,7 +112,6 @@ struct bpred_dir_t {
       int shift_width;    /* number of history bits to keep in a branch history reigster */
       int xor;            /* are we going to implement xor? */
 
-      int piecewise_prediction; 
       int n_index;
       int m_index; 
       int output;

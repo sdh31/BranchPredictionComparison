@@ -730,8 +730,6 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
       }
       p = result_char;
     }
-
-
     break;
 
     case BPredTaken:
@@ -1113,16 +1111,17 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
    */
 
   /* update state (but not for jumps) */
-  if (dir_update_ptr->pdir1)
-    {
-      if (taken)
-    	{
+  if (dir_update_ptr->pdir1) {
+      if (taken) {
     	  if (*dir_update_ptr->pdir1 < 3)
     	    ++*dir_update_ptr->pdir1;
-    	}
+    	} else { /* not taken */
+        if (*dir_update_ptr->pdir1 > 0)
+          --*dir_update_ptr->pdir1;
+      }
 
       /* Perceptron Case */
-      if (pred -> class == BPredPerceptron){
+      if (pred -> class == BPredPerceptron) {
         int i, t, output;
         double theta;
         /* Set Theta (From Paper) */
@@ -1164,8 +1163,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
            pred->dirpred.twolev->config.perceptron.branch_history_table[l1index][i] = priorVal;
         }
         pred->dirpred.twolev->config.perceptron.branch_history_table[l1index][1] = t;
-      } 
-      else if (pred -> class == BPredPiecewiseLinear) {
+      } else if (pred -> class == BPredPiecewiseLinear) {
         int output, n_size, m_size, shift_width;
         output = pred -> dirpred.twolev -> config.piecewise_linear.output;
         n_size = pred -> dirpred.twolev -> config.piecewise_linear.n_size;
@@ -1225,10 +1223,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
         }
         pred->dirpred.twolev->config.piecewise_linear.branch_history_table[0][0] = t;
 
-      } else { /* not taken */
-    	  if (*dir_update_ptr->pdir1 > 0)
-    	    --*dir_update_ptr->pdir1;
-    	}
+      } 
     }
 
   /* combining predictor also updates second predictor and meta predictor */

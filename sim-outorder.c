@@ -618,7 +618,7 @@ sim_reg_options(struct opt_odb_t *odb)
                );
 
   opt_reg_string(odb, "-bpred",
-		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|perceptron}",
+		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|perceptron|piecewise_linear}",
                  &pred_type, /* default */"bimod",
                  /* print */TRUE, /* format */NULL);
 
@@ -957,13 +957,21 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
         /* ret-addr stack size */ras_size);
     } 
     else if (!mystricmp(pred_type, "piecewise_linear")) {
+      /* perceptron predictor, bpred_create() checks args */
+      if (piecewise_linear_nelt != 4) {
+          fatal("bad perceptron pred config (<l1size> <l2size> <hist_size> <xor>)");
+      }
+      if (btb_nelt != 2) {
+          fatal("bad btb config (<num_sets> <associativity>)");
+      }
+
       pred = bpred_create(BPredPiecewiseLinear,
         /* bimod table size */0,
-        /* piecewise n size */perceptron_config[0],
-        /* piecewise m size */perceptron_config[1],
+        /* piecewise n size */piecewise_linear_config[0],
+        /* piecewise m size */piecewise_linear_config[1],
         /* meta table size */0,
-        /* history reg size */perceptron_config[2],
-        /* history xor address */perceptron_config[3],
+        /* history reg size */piecewise_linear_config[2],
+        /* history xor address */piecewise_linear_config[3],
         /* btb sets */btb_config[0],
         /* btb assoc */btb_config[1],
         /* ret-addr stack size */ras_size);
