@@ -61,7 +61,11 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
   break;
 
   case BPredPiecewiseLinear:
-    /* here, l1size = n, l2size = m */
+    /* IMPORTANT: l1size = n, l2size = m
+          'n' represents the total number of branches used as the base of the 3D matrix.
+          'm' represents the total number of path branches used.
+          Ideally, both are infinite, but we can't really do this in hardware.
+     */
     pred->dirpred.twolev = bpred_dir_create(class, l1size, l2size, shift_width, xor);
   break;
 
@@ -267,9 +271,9 @@ bpred_dir_create (
 
   case BPredPiecewiseLinear:
     if (!l1size)
-      fatal("l1 size, %d should be positive, non-zero number", l1size);
+      fatal("m size, %d should be positive, non-zero number", l1size);
     if (!l2size)
-      fatal("l2 size should be positive, non-zero number");
+      fatal("n size should be positive, non-zero number");
     if (!shift_width)
       fatal("shift width be positive, non-zero number");
 
@@ -315,10 +319,11 @@ bpred_dir_create (
 
     /******* Allocate and Initialize GA Array *******/
 
-    pred_dir->config.piecewise_linear.GA = (md_addr_t *) malloc(m_size * sizeof(md_addr_t)); 
+    // need shift_width entries -> basically, one address for each entry on the BHT
+    pred_dir->config.piecewise_linear.GA = (md_addr_t *) malloc(shift_width * sizeof(md_addr_t)); 
 
-    for (k = 0; k < m_size; k++) {
-      pred_dir->config.piecewise_linear.GA[k] = 0x00000000;
+    for (k = 0; k < shift_width; k++) {
+      pred_dir->config.piecewise_linear.GA[k] = 0x00000000; // TODO: is this form of initialization correct?
     }
 
     /******* End of GA Array Allocation *******/
@@ -370,7 +375,7 @@ bpred_dir_config(
 
   case BPredPiecewiseLinear:
     fprintf(stream,
-      "pred_dir: %s: perceptron: %d m-sz, %d bits/ent, %s xor, %d n-sz\n",
+      "pred_dir: %s: piecewise_linear: %d m-sz, %d bits/ent, %s xor, %d n-sz\n",
       name,
       pred_dir->config.piecewise_linear.n_size,
       pred_dir->config.piecewise_linear.shift_width,
@@ -421,8 +426,14 @@ bpred_config(struct bpred_t *pred,	/* branch predictor instance */
 
   /* Added Perceptron & Piecewise Linear Configuration */ 
   case BPredPerceptron:
-  case BPredPiecewiseLinear:
     bpred_dir_config (pred->dirpred.twolev, "perceptron", stream);
+    fprintf(stream, "btb: %d sets x %d associativity", 
+      pred->btb.sets, pred->btb.assoc);
+    fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
+    break;
+
+  case BPredPiecewiseLinear:
+    bpred_dir_config (pred->dirpred.twolev, "piecewise_linear", stream);
     fprintf(stream, "btb: %d sets x %d associativity", 
       pred->btb.sets, pred->btb.assoc);
     fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
@@ -693,6 +704,7 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
       pred_dir -> config.piecewise_linear.n_index = i_index;
       pred_dir -> config.piecewise_linear.baddr = baddr;
 
+      /* use bias weight */
       output = pred_dir -> config.piecewise_linear.weight_table[i_index][0][0];
 
       int i = 0;

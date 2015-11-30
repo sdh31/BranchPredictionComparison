@@ -106,8 +106,7 @@ struct bpred_dir_t {
     } perceptron;
 
     struct {
-
-      md_addr_t baddr;
+      /* parameters that are given by the user */
       int n_size;         
       int m_size;         
       int shift_width;    /* number of history bits to keep in a branch history reigster */
@@ -117,6 +116,9 @@ struct bpred_dir_t {
       int n_index;
       int m_index; 
       int output;
+
+      md_addr_t baddr;
+
 
 
       /* Level 1 History Table. There will be one row, and
