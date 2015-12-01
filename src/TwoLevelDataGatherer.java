@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 public class TwoLevelDataGatherer {
 
-	private static final String TWO_LEVEL_DATA_FILE = "TwoLevelDataLonger.csv";
+	private static final String TWO_LEVEL_DATA_FILE = "TwoLevelData.csv";
 
 	public List<DataLine> gatherDataFromFolder(String folderName) {
 		List<DataLine> dataLines = new ArrayList<DataLine>();
@@ -43,7 +43,7 @@ public class TwoLevelDataGatherer {
 		/* removes file extension */
 		fileName = fileName.substring(0, fileName.lastIndexOf('.'));
 
-		String instructionCount = "";
+		String branchCount = "";
 		String bPredMisses = "";
 		Config config = null;
 
@@ -55,9 +55,9 @@ public class TwoLevelDataGatherer {
 				if (line.contains("bpred:2lev") && line.contains("(<l1size> <l2size> <hist_size> <xor>)")) {
 					config = getFileConfig(line);
 				}
-				if (line.contains("sim_num_insn")) {
+				if (line.contains("sim_total_branches")) {
 					String[] splits = line.split("\\s+");
-					instructionCount = splits[1];
+					branchCount = splits[1];
 				}
 				if (line.contains("bpred_2lev.misses")) {
 					String[] splits = line.split("\\s+");
@@ -66,7 +66,7 @@ public class TwoLevelDataGatherer {
 				line = br.readLine();
 			}
 		} catch (IOException e) { }
-		DataLine dataLine= new DataLine(benchmark, config, bPredMisses, instructionCount);
+		DataLine dataLine= new DataLine(benchmark, config, bPredMisses, branchCount);
 		return dataLine;
 	}
 
@@ -110,7 +110,7 @@ public class TwoLevelDataGatherer {
 						         dataLine.config.historyWidth + "," +
 						         dataLine.config.xor + "," +
 						         dataLine.bPredMisses + "," +
-						         dataLine.numInstructions;
+						         dataLine.numBranches;
 				writer.write(lineOut);
 				writer.newLine();
 			}
@@ -138,13 +138,13 @@ public class TwoLevelDataGatherer {
 		private String benchmark;
 		private Config config;
 		private String bPredMisses;
-		private String numInstructions;
+		private String numBranches;
 
-		public DataLine(String benchmark, Config config, String bPredMisses, String numInstructions) {
+		public DataLine(String benchmark, Config config, String bPredMisses, String numBranches) {
 			this.benchmark = benchmark;
 			this.config = config;
 			this.bPredMisses = bPredMisses;
-			this.numInstructions = numInstructions;
+			this.numBranches = numBranches;
 		}
 	}
 
