@@ -113,12 +113,9 @@ struct bpred_dir_t {
       int xor;            /* are we going to implement xor? */
 
       int n_index;
-      int m_index; 
       int output;
 
       md_addr_t baddr;
-
-
 
       /* Level 1 History Table. There will be one row, and
          cols represent a taken (1) / not taken (-1) decision */
