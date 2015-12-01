@@ -1,23 +1,11 @@
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 2048 2 0 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_2048_2_0.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 4096 12 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_4096_12_1.txt" 2>&1
 
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 8192 4 0 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_8192_4_0.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 8192 13 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_8192_13_1.txt" 2>&1
 
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 32768 6 0 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_32768_6_0.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 16384 14 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_16384_14_1.txt" 2>&1
 
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 524288 10 0 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_524288_10_0.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 32768 15 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_32768_15_1.txt" 2>&1
 
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 8388608 14 0 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_8388608_14_0.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 131072 17 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_131072_17_1.txt" 2>&1
 
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 134217728 18 0 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_134217728_18_0.txt" 2>&1
-
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 2048 2 1 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_2048_2_1.txt" 2>&1
-
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 8192 4 1 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_8192_4_1.txt" 2>&1
-
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 32768 6 1 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_32768_6_1.txt" 2>&1
-
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 524288 10 1 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_524288_10_1.txt" 2>&1
-
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 8388608 14 1 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_8388608_14_1.txt" 2>&1
-
-./RUNgcc ../../benchmarks/sim-outorder ../spec2000benchmarks/gcc00.peak.ev6 -bpred 2lev -bpred:2lev 512 134217728 18 1 -max:inst 500000000 -fastfwd 200000000 > "gcc_2lev_512_134217728_18_1.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 262144 18 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_262144_18_1.txt" 2>&1
