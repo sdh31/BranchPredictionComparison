@@ -267,8 +267,8 @@ bpred_dir_create (
         pred_dir -> config.perceptron.weight_table[i][j] = 0;
       }
     }
-    break;
   }
+  break;
 
   case BPredPiecewiseLinear: {
     if (!l1size)
@@ -310,7 +310,7 @@ bpred_dir_create (
 
     for (i=0; i < n_size; i++) {
       pred_dir->config.piecewise_linear.weight_table[i] = (int **) malloc(m_size * sizeof(int *)); 
-      
+
       for (j=0; j < m_size; j++) {
         pred_dir->config.piecewise_linear.weight_table[i][j] = (int *) malloc((1 + shift_width) * sizeof(int)); 
 
@@ -318,7 +318,6 @@ bpred_dir_create (
         for (k = 0; k < 1 + shift_width; k++) {
            pred_dir -> config.piecewise_linear.weight_table[i][j][k] = 0;
         }
-
       }
     }
     /******* End of Weight Table Allocation *******/
@@ -329,12 +328,12 @@ bpred_dir_create (
     pred_dir->config.piecewise_linear.GA = (md_addr_t *) malloc(shift_width * sizeof(md_addr_t)); 
 
     for (k = 0; k < shift_width; k++) {
-      pred_dir->config.piecewise_linear.GA[k] = 0x00000000; // TODO: is this form of initialization correct?
+      // pred_dir->config.piecewise_linear.GA[k] = 0x00000000; // TODO: is this form of initialization correct?
     }
-
     /******* End of GA Array Allocation *******/
-    break;
   }
+  break;
+
 
   case BPredTaken:
   case BPredNotTaken:
@@ -698,6 +697,7 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
     }
     break;
 
+
     case BPredPiecewiseLinear:
     {
 
@@ -726,11 +726,12 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
       }
 
       pred_dir -> config.piecewise_linear.output = output;
+      // fprintf(stderr, "total output: %d\n", output);
 
       /* Update the pointer */
       unsigned char* result_char = calloc(1, sizeof(unsigned char));
       if (output >= 0) {
-        *result_char = 2;
+        *result_char = 3;
       } else {
         *result_char = 0;
       }
@@ -1065,7 +1066,8 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		  pbtb = &pred->btb.btb_data[i];
 		}
 	      
-	      dassert(pred->btb.btb_data[i].prev != pred->btb.btb_data[i].next);
+	      dassert(pred->btb.btb_data[i].prev 
+		      != pred->btb.btb_data[i].next);
 	      if (pred->btb.btb_data[i].prev == NULL)
 		{
 		  /* this is the head of the lru list, ie current MRU item */
@@ -1181,8 +1183,6 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
         m_size = pred -> dirpred.twolev -> config.piecewise_linear.m_size;
         shift_width = pred -> dirpred.twolev -> config.piecewise_linear.shift_width;
 
-
-
         /* Set Theta (From Paper) */
         double theta;
         theta = 2.14 * (shift_width + 1) + 20.58;
@@ -1219,7 +1219,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
           }
 
           int i;
-          for (i = 0; i < shift_width; i ++) {
+          for (i = 0; i < shift_width; i++) {
             md_addr_t j_addr = pred->dirpred.twolev->config.piecewise_linear.GA[i];
             int m_index = (j_addr >> MD_BR_SHIFT) & (m_size - 1);
             if (pred -> dirpred.twolev -> config.piecewise_linear.branch_history_table[0][i] == t) {
@@ -1232,7 +1232,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
         }
 
         /* shift over GA array */
-        for (i = m_size - 1; i >= 1; i--) {
+        for (i = shift_width - 1; i >= 1; i--) {
            md_addr_t priorVal = pred->dirpred.twolev->config.piecewise_linear.GA[i-1];
            pred->dirpred.twolev->config.piecewise_linear.GA[i] = priorVal;
         }

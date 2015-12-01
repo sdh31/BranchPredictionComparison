@@ -959,7 +959,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
     else if (!mystricmp(pred_type, "piecewise_linear")) {
       /* perceptron predictor, bpred_create() checks args */
       if (piecewise_linear_nelt != 4) {
-          fatal("bad perceptron pred config (<l1size> <l2size> <hist_size> <xor>)");
+          fatal("bad piecewise_linear pred config (<l1size> <l2size> <hist_size> <xor>)");
       }
       if (btb_nelt != 2) {
           fatal("bad btb config (<num_sets> <associativity>)");
