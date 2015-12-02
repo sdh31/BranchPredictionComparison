@@ -72,10 +72,24 @@ static int twolev_nelt = 4;
 static int twolev_config[4] =
   { /* l1size */1, /* l2size */1024, /* hist */8, /* xor */FALSE};
 
-/* Perceptron Predictor Config (<l1size> <l2size> <hist_size> <xor>)*/
+/* Perceptron Predictor Config (<n> <m> <hist_size> <xor>) */
+
 static int perceptron_nelt = 4;
 static int perceptron_config[4] = 
   { /* l1size */ 1, /* l2size */ 512, /* hist */ 8, /* xor */ FALSE};
+
+
+/* Piecewise Linear Predictor Config (<l1size> <l2size> <hist_size> <xor>)
+W[B, 0, 0] is the weight that keeps track of the tendency of branch B
+  to be taken. We limit the # branches to m. 
+  
+  Columns correspond to branches in the path history.
+  Rows correspond to positions in the history.
+*/
+
+static int piecewise_linear_nelt = 4;
+static int piecewise_linear_config[4] = 
+  { /* n */ 512, /* m */ 512, /* hist */ 8, /* xor */ FALSE};
 
 /* combining predictor config (<meta_table_size> */
 static int comb_nelt = 1;
@@ -604,7 +618,7 @@ sim_reg_options(struct opt_odb_t *odb)
                );
 
   opt_reg_string(odb, "-bpred",
-		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|perceptron}",
+		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|perceptron|piecewise_linear}",
                  &pred_type, /* default */"bimod",
                  /* print */TRUE, /* format */NULL);
 
@@ -634,6 +648,13 @@ sim_reg_options(struct opt_odb_t *odb)
        "(<l1size> <l2size> <hist_size> <xor>)",
                    perceptron_config, perceptron_nelt, &perceptron_nelt,
        /* default */perceptron_config,
+                   /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
+
+  opt_reg_int_list(odb, "-bpred:piecewise_linear",
+                   "piecewise linear predictor config "
+       "(<m_size> <n_size> <hist_size> <xor>)",
+                   piecewise_linear_config, piecewise_linear_nelt, &piecewise_linear_nelt,
+       /* default */piecewise_linear_config,
                    /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
 
 
@@ -915,8 +936,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
     }
 
   /* added perceptron argument checker */
-     else if (!mystricmp(pred_type, "perceptron"))
-    {
+   else if (!mystricmp(pred_type, "perceptron")) {
       /* perceptron predictor, bpred_create() checks args */
       if (perceptron_nelt != 4) {
           fatal("bad perceptron pred config (<l1size> <l2size> <hist_size> <xor>)");
@@ -936,6 +956,27 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
         /* btb assoc */btb_config[1],
         /* ret-addr stack size */ras_size);
     } 
+    else if (!mystricmp(pred_type, "piecewise_linear")) {
+      /* perceptron predictor, bpred_create() checks args */
+      if (piecewise_linear_nelt != 4) {
+          fatal("bad piecewise_linear pred config (<l1size> <l2size> <hist_size> <xor>)");
+      }
+      if (btb_nelt != 2) {
+          fatal("bad btb config (<num_sets> <associativity>)");
+      }
+
+      pred = bpred_create(BPredPiecewiseLinear,
+        /* bimod table size */0,
+        /* piecewise n size */piecewise_linear_config[0],
+        /* piecewise m size */piecewise_linear_config[1],
+        /* meta table size */0,
+        /* history reg size */piecewise_linear_config[2],
+        /* history xor address */piecewise_linear_config[3],
+        /* btb sets */btb_config[0],
+        /* btb assoc */btb_config[1],
+        /* ret-addr stack size */ras_size);
+    }
+
 
   else if (!mystricmp(pred_type, "comb"))
     {
