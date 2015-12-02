@@ -290,9 +290,9 @@ bpred_dir_create (
 
     /******* Branch History Table Allocation *******
              NOTE: Defaulting this to one row, so a global BHT */
-    fprintf(stderr, "N Size: %d\n", n_size);
-    fprintf(stderr, "M Size: %d\n", m_size);
-    fprintf(stderr, "Shift Size: %d\n", shift_width);
+    // fprintf(stderr, "N Size: %d\n", n_size);
+    // fprintf(stderr, "M Size: %d\n", m_size);
+    // fprintf(stderr, "Shift Size: %d\n", shift_width);
 
     pred_dir->config.piecewise_linear.branch_history_table = (int **) malloc(1 * sizeof(int *));
     /* Allocate columns for this one row */
@@ -328,7 +328,7 @@ bpred_dir_create (
     pred_dir->config.piecewise_linear.GA = (md_addr_t *) malloc(shift_width * sizeof(md_addr_t)); 
 
     for (k = 0; k < shift_width; k++) {
-      // pred_dir->config.piecewise_linear.GA[k] = 0x00000000; // TODO: is this form of initialization correct?
+       pred_dir->config.piecewise_linear.GA[k] = 0x00000000; // TODO: is this form of initialization correct?
     }
     /******* End of GA Array Allocation *******/
   }
@@ -1161,6 +1161,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
                  pred->dirpred.twolev->config.perceptron.weight_table[l2index][i]++;
             } else {
               pred->dirpred.twolev->config.perceptron.weight_table[l2index][i]--;
+            }
           }
         }
         /* update the BHT */
@@ -1247,7 +1248,6 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 
       } 
     }
-
   /* combining predictor also updates second predictor and meta predictor */
   /* second direction predictor */
   if (dir_update_ptr->pdir2)
