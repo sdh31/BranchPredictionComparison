@@ -1158,14 +1158,9 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
           for (i=0; i < pred->dirpred.twolev -> config.perceptron.shift_width; i++){
             /* if branch outcome agrees, increment weight */
             if (t == pred->dirpred.twolev -> config.perceptron.branch_history_table[l1index][i]){
-
-              if (pred->dirpred.twolev->config.perceptron.weight_table[l2index][i] < 126) {
                  pred->dirpred.twolev->config.perceptron.weight_table[l2index][i]++;
-              }
             } else {
-              if (pred->dirpred.twolev->config.perceptron.weight_table[l2index][i] > -127)
               pred->dirpred.twolev->config.perceptron.weight_table[l2index][i]--;
-            }
           }
         }
         /* update the BHT */
@@ -1223,9 +1218,13 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
             md_addr_t j_addr = pred->dirpred.twolev->config.piecewise_linear.GA[i];
             int m_index = (j_addr >> MD_BR_SHIFT) & (m_size - 1);
             if (pred -> dirpred.twolev -> config.piecewise_linear.branch_history_table[0][i] == t) {
-              pred -> dirpred.twolev -> config.piecewise_linear.weight_table[n_index][m_index][i + 1]++;
+              if (pred -> dirpred.twolev -> config.piecewise_linear.weight_table[n_index][m_index][i + 1] < 126) {
+                 pred -> dirpred.twolev -> config.piecewise_linear.weight_table[n_index][m_index][i + 1]++;
+              }
             } else {
-              pred -> dirpred.twolev -> config.piecewise_linear.weight_table[n_index][m_index][i + 1]--;
+              if (pred -> dirpred.twolev -> config.piecewise_linear.weight_table[n_index][m_index][i + 1] > -127) {
+                pred -> dirpred.twolev -> config.piecewise_linear.weight_table[n_index][m_index][i + 1]--;
+              }
             }
           }
 
