@@ -27,20 +27,35 @@ gshare_percentage = reshape(gshare_percentage, 7, [])';
 perceptron_percentage = reshape(perceptron_percentage, 7, [])';
 piecewise_percentage = reshape(piecewise_percentage, 7, [])';
 
+figure
+ ap = get(gca, 'position');
 for i=1:5
-    figure(i)
-    plot(hardware, gshare_percentage(i,:), 'k-')
+    
+    if(i<=4)
+        subplot(3,2,i)
+       
+    else
+        sh = subplot(3,2,5)
+        sp = get(sh, 'position');
+        set(sh, 'position', [sp(1)+.5*(ap(3)-sp(3)), sp(2:end)]);
+    end
+    
+    plot(hardware, gshare_percentage(i,:), 'k^-')
     graph_title = strcat('Hardware vs. Percent Mispredict for', {' '}, benchmarks(i));
     title(graph_title)
     xlabel('Hardware Cost (KB)')
     ylabel('Percent Mispredict')
     hold on
-    plot(hardware, perceptron_percentage(i,:), 'r-')
-    plot(hardware, piecewise_percentage(i,:), 'b-')
+    plot(hardware, perceptron_percentage(i,:), 'rx-')
+    plot(hardware, piecewise_percentage(i,:), 'bo-')
     hold off
-    legend('Gshare', 'Perceptron', 'Piecewise Linear', 'Location', 'Best')
     
-    filename = char(strcat('hardware_analysis_', benchmarks(i), '.png'));
-    saveas(gcf, filename, 'png')
+    if(i==5)
+    h = legend('Gshare', 'Perceptron', 'Piecewise Linear');
+    pos = get(h, 'position')
+    set(h, 'position', [pos(1)+0.3 pos(2)-0.05 0.123 0.1])
+    end
+
 end
 
+print('hardware_analysis_combined', '-djpeg')
