@@ -1,11 +1,13 @@
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 4096 12 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_4096_12_1.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred perceptron -bpred:perceptron 1 109 12 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_perceptron_1_109_12_0.txt" 2>&1
 
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 8192 13 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_8192_13_1.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred perceptron -bpred:perceptron 1 109 22 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_perceptron_1_109_22_0.txt" 2>&1
 
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 16384 14 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_16384_14_1.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred perceptron -bpred:perceptron 1 165 28 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_perceptron_1_165_28_0.txt" 2>&1
 
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 32768 15 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_32768_15_1.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred perceptron -bpred:perceptron 1 263 34 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_perceptron_1_263_34_0.txt" 2>&1
 
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 131072 17 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_131072_17_1.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred perceptron -bpred:perceptron 1 493 36 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_perceptron_1_493_36_0.txt" 2>&1
 
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred 2lev -bpred:2lev 1 262144 18 1 -max:inst 50000000 -fastfwd 20000000 > "vortex_2lev_1_262144_18_1.txt" 2>&1
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred perceptron -bpred:perceptron 1 555 59 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_perceptron_1_555_59_0.txt" 2>&1
+
+./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred perceptron -bpred:perceptron 1 1111 59 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_perceptron_1_1111_59_0.txt" 2>&1
