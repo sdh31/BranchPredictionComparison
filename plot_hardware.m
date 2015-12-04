@@ -10,14 +10,14 @@ fclose(fid);
 gshare_percentage = C{7}.*100./C{8}; % percentage mispredicted
 
 fid = fopen('PerceptronData.csv');
-C = textscan(fid, '%s %s %f %f %f %f %f %f', 'Delimiter', ',', 'EmptyValue', -Inf);
+D = textscan(fid, '%s %s %f %f %f %f %f %f', 'Delimiter', ',', 'EmptyValue', -Inf);
 fclose(fid);
-perceptron_percentage = C{7}.*100./C{8}; % percentage mispredicted
+perceptron_percentage = D{7}.*100./D{8}; % percentage mispredicted
 
 fid = fopen('PiecewiseLinearData.csv');
-C = textscan(fid, '%s %s %f %f %f %f %f %f', 'Delimiter', ',', 'EmptyValue', -Inf);
+E = textscan(fid, '%s %s %f %f %f %f %f %f', 'Delimiter', ',', 'EmptyValue', -Inf);
 fclose(fid);
-piecewise_percentage = C{7}.*100./C{8}; % percentage mispredicted
+piecewise_percentage = E{7}.*100./E{8}; % percentage mispredicted
 
 benchmarks = categories(categorical(C{1})); % name of benchmarks
 hardware = [1 2 4 8 16 32 64]; % hardware cost in KB
@@ -27,7 +27,7 @@ gshare_percentage = reshape(gshare_percentage, 7, [])';
 perceptron_percentage = reshape(perceptron_percentage, 7, [])';
 piecewise_percentage = reshape(piecewise_percentage, 7, [])';
 
-figure
+figure(1)
  ap = get(gca, 'position');
 for i=1:5
     
@@ -79,3 +79,21 @@ for j=1:5
 end
 
 fclose(fileID);
+
+%% Visualization of Average Percentage Differences
+gshare_avg = sum(reshape(C{7}, 7, [])',2)./sum(reshape(C{8}, 7, [])',2)*100;
+perceptron_avg = sum(reshape(D{7}, 7, [])',2)./sum(reshape(D{8}, 7, [])',2)*100;
+piecewise_avg = sum(reshape(E{7}, 7, [])',2)./sum(reshape(E{8}, 7, [])',2)*100;
+
+bar_diff = [gshare_avg perceptron_avg piecewise_avg];
+
+figure(2)
+bar(bar_diff)
+set(gca, 'XTickLabel', benchmarks)
+config = {'gshare', 'perceptron', 'piecewise'};
+legend(config, 'Location', 'Best')
+ylabel('Average Mispredict Percentage')
+xlabel('Benchmarks')
+title('Average Mispredict Percentage per Benchmark for All Configurations')
+
+print('average_mispredict_percentages', '-djpeg')
