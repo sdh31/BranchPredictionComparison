@@ -1,13 +1,13 @@
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 1 59 16 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_piecewise_linear_1_59_16_0.txt" 2>&1
+./RUNvpr ../../benchmarks/sim-outorder ../spec2000benchmarks/vpr00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 1 59 16 0 -max:inst 50000000 -fastfwd 20000000 > "vpr_piecewise_linear_1_59_16_0.txt" 2>&1
 
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 1 119 16 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_piecewise_linear_1_119_16_0.txt" 2>&1
+./RUNvpr ../../benchmarks/sim-outorder ../spec2000benchmarks/vpr00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 1 119 16 0 -max:inst 50000000 -fastfwd 20000000 > "vpr_piecewise_linear_1_119_16_0.txt" 2>&1
 
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 1 215 19 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_piecewise_linear_1_215_19_0.txt" 2>&1
+./RUNvpr ../../benchmarks/sim-outorder ../spec2000benchmarks/vpr00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 1 215 19 0 -max:inst 50000000 -fastfwd 20000000 > "vpr_piecewise_linear_1_215_19_0.txt" 2>&1
 
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 2 176 19 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_piecewise_linear_2_176_19_0.txt" 2>&1
+./RUNvpr ../../benchmarks/sim-outorder ../spec2000benchmarks/vpr00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 2 176 19 0 -max:inst 50000000 -fastfwd 20000000 > "vpr_piecewise_linear_2_176_19_0.txt" 2>&1
 
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 4 138 23 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_piecewise_linear_4_138_23_0.txt" 2>&1
+./RUNvpr ../../benchmarks/sim-outorder ../spec2000benchmarks/vpr00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 4 138 23 0 -max:inst 50000000 -fastfwd 20000000 > "vpr_piecewise_linear_4_138_23_0.txt" 2>&1
 
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 8 118 26 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_piecewise_linear_8_118_26_0.txt" 2>&1
+./RUNvpr ../../benchmarks/sim-outorder ../spec2000benchmarks/vpr00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 8 118 26 0 -max:inst 50000000 -fastfwd 20000000 > "vpr_piecewise_linear_8_118_26_0.txt" 2>&1
 
-./RUNvortex ../../benchmarks/sim-outorder ../spec2000benchmarks/vortex00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 8 151 43 0 -max:inst 50000000 -fastfwd 20000000 > "vortex_piecewise_linear_8_151_43_0.txt" 2>&1
+./RUNvpr ../../benchmarks/sim-outorder ../spec2000benchmarks/vpr00.peak.ev6 -bpred piecewise_linear -bpred:piecewise_linear 8 151 43 0 -max:inst 50000000 -fastfwd 20000000 > "vpr_piecewise_linear_8_151_43_0.txt" 2>&1

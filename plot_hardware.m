@@ -2,7 +2,7 @@
 % Percentage Misses vs. Hardware Cost
 
 %% Importing csv-files
-clear; close all; clf
+clear; close all; clf; 
 
 fid = fopen('TwoLevelGshareData.csv');
 C = textscan(fid, '%s %s %f %f %f %f %f %f', 'Delimiter', ',', 'EmptyValue', -Inf);
@@ -35,7 +35,7 @@ for i=1:5
         subplot(3,2,i)
        
     else
-        sh = subplot(3,2,5)
+        sh = subplot(3,2,5);
         sp = get(sh, 'position');
         set(sh, 'position', [sp(1)+.5*(ap(3)-sp(3)), sp(2:end)]);
     end
@@ -52,10 +52,30 @@ for i=1:5
     
     if(i==5)
     h = legend('Gshare', 'Perceptron', 'Piecewise Linear');
-    pos = get(h, 'position')
+    pos = get(h, 'position');
     set(h, 'position', [pos(1)+0.3 pos(2)-0.05 0.123 0.1])
     end
 
 end
 
 print('hardware_analysis_combined', '-djpeg')
+
+%% Quantitative Analysis
+gshare_perceptron = abs(gshare_percentage - perceptron_percentage);
+gshare_piecewise = abs(gshare_percentage - piecewise_percentage);
+perceptron_piecewise = abs(perceptron_percentage - piecewise_percentage); 
+
+fileID = fopen('quantitative_analysis.txt', 'w');
+for j=1:5
+    fprintf(fileID, 'Percentage Difference Between gshare and perceptron for %s\n', char(benchmarks(j)));
+    fprintf(fileID, '%7.2f %%', gshare_perceptron(j,:));
+    fprintf(fileID, '\n');
+    fprintf(fileID, 'Percentage Difference Between gshare and piecewise for %s\n', char(benchmarks(j)));
+    fprintf(fileID, '%7.2f %%', gshare_piecewise(j,:));
+    fprintf(fileID, '\n');
+    fprintf(fileID, 'Percentage Difference Between perceptron and piecewise for %s\n', char(benchmarks(j)));
+    fprintf(fileID, '%7.2f %%', perceptron_piecewise(j,:));
+    fprintf(fileID, '\n');
+end
+
+fclose(fileID);
